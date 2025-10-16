@@ -413,7 +413,7 @@ export default function Home() {
                         bounds="parent"
                         className="absolute"
                       >
-                        <div className="w-full h-full bg-blue-500 rounded cursor-move flex items-center justify-center text-white font-bold border-2 border-blue-600"></div>
+                        <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
                       </Rnd>
                     );
                   })}
@@ -430,27 +430,62 @@ export default function Home() {
       })}
 
       {/* Floating 버튼들 */}
-      <button
-        onClick={addItem}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 hover:scale-110 transition-all flex items-center justify-center text-2xl font-bold"
-        title="아이템 추가"
-      >
-        +
-      </button>
-      <button
-        onClick={addSection}
-        className="fixed bottom-8 right-28 w-14 h-14 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 hover:scale-110 transition-all flex items-center justify-center text-sm font-bold"
-        title="섹션 추가"
-      >
-        S+
-      </button>
-      <button
-        onClick={savePage}
-        className="fixed bottom-8 right-48 w-14 h-14 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-600 hover:scale-110 transition-all flex items-center justify-center text-xl font-bold"
-        title="페이지 저장"
-      >
-        💾
-      </button>
+      <div className="fixed bottom-6 right-6 flex gap-3">
+        <button
+          onClick={savePage}
+          className="w-12 h-12 bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200"
+          title="페이지 저장"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+            />
+          </svg>
+        </button>
+        <button
+          onClick={addSection}
+          className="w-12 h-12 bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200"
+          title="섹션 추가"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+            <rect
+              x="4"
+              y="6"
+              width="16"
+              height="12"
+              rx="2"
+              strokeWidth={2}
+              fill="none"
+            />
+          </svg>
+        </button>
+        <button
+          onClick={addItem}
+          className="w-12 h-12 bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center text-2xl font-light border border-gray-200"
+          title="아이템 추가"
+        >
+          +
+        </button>
+      </div>
     </div>
   );
 }
