@@ -2,17 +2,26 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Rnd } from "react-rnd";
+import { v4 as uuidv4 } from "uuid";
 
 type Section = {
-  id: number;
+  id: string;
   height: number; // 행 개수
 };
 
 type Item = {
-  id: number;
-  sectionId: number;
+  id: string;
+  sectionId: string;
   desktop: { x: number; y: number; width: number; height: number };
   mobile: { x: number; y: number; width: number; height: number };
+};
+
+type Page = {
+  id: string;
+  sections: Section[];
+  items: Item[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 export default function Home() {
@@ -24,18 +33,20 @@ export default function Home() {
 
   const [cellWidth, setCellWidth] = useState(0);
 
-  // ID 카운터
-  const [nextSectionId, setNextSectionId] = useState(2);
-  const [nextItemId, setNextItemId] = useState(2);
+  // 초기 ID 생성
+  const initialSectionId = useRef(uuidv4());
+  const initialItemId = useRef(uuidv4());
 
   // 섹션 관리
-  const [sections, setSections] = useState<Section[]>([{ id: 1, height: 24 }]);
+  const [sections, setSections] = useState<Section[]>([
+    { id: initialSectionId.current, height: 24 },
+  ]);
 
   // 아이템 관리
   const [items, setItems] = useState<Item[]>([
     {
-      id: 1,
-      sectionId: 1,
+      id: initialItemId.current,
+      sectionId: initialSectionId.current,
       desktop: { x: 0, y: 0, width: 1, height: 1 },
       mobile: { x: 0, y: 0, width: 1, height: 1 },
     },
@@ -47,10 +58,12 @@ export default function Home() {
   const [isVisible, setIsVisible] = useState(false);
 
   // 선택된 섹션 관리
-  const [selectedSectionId, setSelectedSectionId] = useState<number>(1);
+  const [selectedSectionId, setSelectedSectionId] = useState<string>(
+    initialSectionId.current
+  );
 
   // 섹션 리사이즈 상태
-  const [resizingSectionId, setResizingSectionId] = useState<number | null>(
+  const [resizingSectionId, setResizingSectionId] = useState<string | null>(
     null
   );
   const [resizeStartY, setResizeStartY] = useState(0);
@@ -59,28 +72,41 @@ export default function Home() {
   // 섹션 추가 함수
   const addSection = () => {
     const newSection: Section = {
-      id: nextSectionId,
+      id: uuidv4(),
       height: 24,
     };
     setSections([...sections, newSection]);
-    setNextSectionId(nextSectionId + 1);
   };
 
   // 아이템 추가 함수 (선택된 섹션에 추가)
   const addItem = () => {
     const newItem: Item = {
-      id: nextItemId,
+      id: uuidv4(),
       sectionId: selectedSectionId,
       desktop: { x: 0, y: 0, width: 2, height: 2 },
       mobile: { x: 0, y: 0, width: 2, height: 2 },
     };
     setItems([...items, newItem]);
-    setNextItemId(nextItemId + 1);
+  };
+
+  // 페이지 저장 함수
+  const savePage = () => {
+    const page: Page = {
+      id: uuidv4(),
+      sections,
+      items,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // 로컬 스토리지에 저장
+    localStorage.setItem("gridPage", JSON.stringify(page));
+    alert("페이지가 저장되었습니다!");
   };
 
   // 섹션 리사이즈 핸들러
   const handleResizeStart = (
-    sectionId: number,
+    sectionId: string,
     section: Section,
     e: React.MouseEvent
   ) => {
@@ -125,6 +151,23 @@ export default function Home() {
     GAP,
     sections,
   ]);
+
+  // 앱 시작 시 로컬 스토리지에서 페이지 데이터 불러오기
+  useEffect(() => {
+    const savedPage = localStorage.getItem("gridPage");
+    if (savedPage) {
+      try {
+        const page: Page = JSON.parse(savedPage);
+        setSections(page.sections);
+        setItems(page.items);
+        if (page.sections.length > 0) {
+          setSelectedSectionId(page.sections[0].id);
+        }
+      } catch (error) {
+        console.error("페이지 데이터 불러오기 실패:", error);
+      }
+    }
+  }, []);
 
   // 셀 너비 계산 (높이는 고정)
   useEffect(() => {
@@ -187,7 +230,7 @@ export default function Home() {
               {!isSelected && (
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                   <button
-                    className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 transition-all pointer-events-auto font-medium"
+                    className="px-6 py-3 bg-white text-black rounded-lg shadow-lg pointer-events-auto font-medium"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedSectionId(section.id);
@@ -400,6 +443,13 @@ export default function Home() {
         title="섹션 추가"
       >
         S+
+      </button>
+      <button
+        onClick={savePage}
+        className="fixed bottom-8 right-48 w-14 h-14 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-600 hover:scale-110 transition-all flex items-center justify-center text-xl font-bold"
+        title="페이지 저장"
+      >
+        💾
       </button>
     </div>
   );
