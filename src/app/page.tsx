@@ -144,7 +144,14 @@ export default function Home() {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [resizingSectionId, resizeStartY, resizeStartHeight, cellHeight, GAP, sections]);
+  }, [
+    resizingSectionId,
+    resizeStartY,
+    resizeStartHeight,
+    cellHeight,
+    GAP,
+    sections,
+  ]);
 
   // 앱 시작 시 로컬 스토리지에서 페이지 데이터 불러오기
   useEffect(() => {
@@ -198,7 +205,7 @@ export default function Home() {
   }, [CELL_ASPECT_RATIO]);
 
   return (
-    <div className="max-w-[1920px] mx-auto min-h-screen p-4 bg-gray-50 relative">
+    <div className="min-h-screen relative">
       {sections.map((section, sectionIndex) => {
         // 각 섹션별 그리드 셀 생성
         const sectionGridCells = Array.from(
@@ -218,209 +225,210 @@ export default function Home() {
         const isSelected = section.id === selectedSectionId;
 
         return (
-          <div key={section.id} className="py-2">
-            <div
-              className="relative cursor-pointer transition-all group"
-              onClick={() => setSelectedSectionId(section.id)}
-            >
-              {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
-              {!isSelected && (
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                  <button
-                    className="px-6 py-3 bg-white text-black rounded-lg shadow-lg pointer-events-auto font-medium"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedSectionId(section.id);
-                    }}
-                  >
-                    섹션 선택하기
-                  </button>
-                </div>
-              )}
-
-              {/* 호버 시 어두운 배경 (선택되지 않은 섹션) */}
-              {!isSelected && (
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-lg pointer-events-none"></div>
-              )}
-
-              <div
-                ref={sectionIndex === 0 ? gridRef : null}
-                className={`w-full grid grid-cols-12 md:grid-cols-24 gap-2 transition-all ${
-                  isSelected ? "ring-2 ring-blue-500 ring-offset-2" : ""
-                }`}
-                style={{
-                  gridTemplateRows: `repeat(${section.height}, ${cellHeight}px)`,
-                  height: `${
-                    section.height * cellHeight + (section.height - 1) * GAP
-                  }px`,
-                }}
-              >
-                {/* 그리드 셀 */}
-                {sectionGridCells.map((cell) => (
-                  <div
-                    key={cell.id}
-                    className={`transition-all duration-200 ${
-                      isVisible ? "bg-slate-200/40" : "bg-transparent"
-                    }`}
-                    data-row={cell.row}
-                    data-col={cell.col}
-                  />
-                ))}
-
-                {/* 섹션 내 아이템들 */}
-                {cellWidth > 0 &&
-                  sectionItems.map((item) => {
-                    const currentItem = isMobile ? item.mobile : item.desktop;
-
-                    return (
-                      <Rnd
-                        key={item.id}
-                        position={{
-                          x: currentItem.x * (cellWidth + GAP),
-                          y: currentItem.y * (cellHeight + GAP),
-                        }}
-                        size={{
-                          width:
-                            currentItem.width * cellWidth +
-                            (currentItem.width - 1) * GAP,
-                          height:
-                            currentItem.height * cellHeight +
-                            (currentItem.height - 1) * GAP,
-                        }}
-                        onDragStart={() => setIsVisible(true)}
-                        onDrag={() => {
-                          if (!isVisible) setIsVisible(true);
-                        }}
-                        onDragStop={(_, d) => {
-                          setIsVisible(false);
-                          const newCol = Math.round(d.x / (cellWidth + GAP));
-                          const newRow = Math.round(d.y / (cellHeight + GAP));
-
-                          setItems(
-                            items.map((i) => {
-                              if (i.id !== item.id) return i;
-
-                              if (isMobile) {
-                                return {
-                                  ...i,
-                                  mobile: {
-                                    ...i.mobile,
-                                    x: Math.max(
-                                      0,
-                                      Math.min(gridCols - 1, newCol)
-                                    ),
-                                    y: Math.max(
-                                      0,
-                                      Math.min(gridCols - 1, newRow)
-                                    ),
-                                  },
-                                };
-                              } else {
-                                return {
-                                  ...i,
-                                  desktop: {
-                                    ...i.desktop,
-                                    x: Math.max(
-                                      0,
-                                      Math.min(gridCols - 1, newCol)
-                                    ),
-                                    y: Math.max(
-                                      0,
-                                      Math.min(gridCols - 1, newRow)
-                                    ),
-                                  },
-                                };
-                              }
-                            })
-                          );
-                        }}
-                        onResizeStart={() => setIsVisible(true)}
-                        onResize={() => {
-                          if (!isVisible) setIsVisible(true);
-                        }}
-                        onResizeStop={(_, __, ref, ___, position) => {
-                          setIsVisible(false);
-                          const newWidth = Math.round(
-                            ref.offsetWidth / (cellWidth + GAP)
-                          );
-                          const newHeight = Math.round(
-                            ref.offsetHeight / (cellHeight + GAP)
-                          );
-                          const newCol = Math.round(
-                            position.x / (cellWidth + GAP)
-                          );
-                          const newRow = Math.round(
-                            position.y / (cellHeight + GAP)
-                          );
-
-                          setItems(
-                            items.map((i) => {
-                              if (i.id !== item.id) return i;
-
-                              if (isMobile) {
-                                return {
-                                  ...i,
-                                  mobile: {
-                                    x: Math.max(
-                                      0,
-                                      Math.min(gridCols - 1, newCol)
-                                    ),
-                                    y: Math.max(
-                                      0,
-                                      Math.min(gridCols - 1, newRow)
-                                    ),
-                                    width: Math.max(
-                                      1,
-                                      Math.min(gridCols - newCol, newWidth)
-                                    ),
-                                    height: Math.max(
-                                      1,
-                                      Math.min(gridCols - newRow, newHeight)
-                                    ),
-                                  },
-                                };
-                              } else {
-                                return {
-                                  ...i,
-                                  desktop: {
-                                    x: Math.max(
-                                      0,
-                                      Math.min(gridCols - 1, newCol)
-                                    ),
-                                    y: Math.max(
-                                      0,
-                                      Math.min(gridCols - 1, newRow)
-                                    ),
-                                    width: Math.max(
-                                      1,
-                                      Math.min(gridCols - newCol, newWidth)
-                                    ),
-                                    height: Math.max(
-                                      1,
-                                      Math.min(gridCols - newRow, newHeight)
-                                    ),
-                                  },
-                                };
-                              }
-                            })
-                          );
-                        }}
-                        dragGrid={[cellWidth + GAP, cellHeight + GAP]}
-                        resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
-                        bounds="parent"
-                        className="absolute"
-                      >
-                        <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
-                      </Rnd>
-                    );
-                  })}
+          <div
+            key={section.id}
+            className={`w-full py-2 relative cursor-pointer transition-all group`}
+            onClick={() => setSelectedSectionId(section.id)}
+          >
+            {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
+            {!isSelected && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                <button
+                  className="px-6 py-3 bg-white text-black rounded-lg shadow-lg pointer-events-auto font-medium"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedSectionId(section.id);
+                  }}
+                >
+                  섹션 선택하기
+                </button>
               </div>
+            )}
 
-              {/* 섹션 리사이즈 핸들 */}
-              <div
-                className="h-px border-t border-dashed border-gray-400 hover:border-blue-500 cursor-ns-resize transition-colors mt-4"
-                onMouseDown={(e) => handleResizeStart(section.id, section, e)}
-              ></div>
+            {/* 호버 시 어두운 배경 (선택되지 않은 섹션) */}
+            {!isSelected && (
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 pointer-events-none"></div>
+            )}
+
+            <div className="max-w-[1920px] mx-auto px-4">
+              <div className="relative">
+                <div
+                  ref={sectionIndex === 0 ? gridRef : null}
+                  className="w-full grid grid-cols-12 md:grid-cols-24 gap-2"
+                  style={{
+                    gridTemplateRows: `repeat(${section.height}, ${cellHeight}px)`,
+                    height: `${
+                      section.height * cellHeight + (section.height - 1) * GAP
+                    }px`,
+                  }}
+                >
+                  {/* 그리드 셀 */}
+                  {sectionGridCells.map((cell) => (
+                    <div
+                      key={cell.id}
+                      className={`transition-all duration-200 ${
+                        isVisible ? "bg-slate-200/40" : "bg-transparent"
+                      }`}
+                      data-row={cell.row}
+                      data-col={cell.col}
+                    />
+                  ))}
+
+                  {/* 섹션 내 아이템들 */}
+                  {cellWidth > 0 &&
+                    sectionItems.map((item) => {
+                      const currentItem = isMobile ? item.mobile : item.desktop;
+
+                      return (
+                        <Rnd
+                          key={item.id}
+                          position={{
+                            x: currentItem.x * (cellWidth + GAP),
+                            y: currentItem.y * (cellHeight + GAP),
+                          }}
+                          size={{
+                            width:
+                              currentItem.width * cellWidth +
+                              (currentItem.width - 1) * GAP,
+                            height:
+                              currentItem.height * cellHeight +
+                              (currentItem.height - 1) * GAP,
+                          }}
+                          onDragStart={() => setIsVisible(true)}
+                          onDrag={() => {
+                            if (!isVisible) setIsVisible(true);
+                          }}
+                          onDragStop={(_, d) => {
+                            setIsVisible(false);
+                            const newCol = Math.round(d.x / (cellWidth + GAP));
+                            const newRow = Math.round(d.y / (cellHeight + GAP));
+
+                            setItems(
+                              items.map((i) => {
+                                if (i.id !== item.id) return i;
+
+                                if (isMobile) {
+                                  return {
+                                    ...i,
+                                    mobile: {
+                                      ...i.mobile,
+                                      x: Math.max(
+                                        0,
+                                        Math.min(gridCols - 1, newCol)
+                                      ),
+                                      y: Math.max(
+                                        0,
+                                        Math.min(gridCols - 1, newRow)
+                                      ),
+                                    },
+                                  };
+                                } else {
+                                  return {
+                                    ...i,
+                                    desktop: {
+                                      ...i.desktop,
+                                      x: Math.max(
+                                        0,
+                                        Math.min(gridCols - 1, newCol)
+                                      ),
+                                      y: Math.max(
+                                        0,
+                                        Math.min(gridCols - 1, newRow)
+                                      ),
+                                    },
+                                  };
+                                }
+                              })
+                            );
+                          }}
+                          onResizeStart={() => setIsVisible(true)}
+                          onResize={() => {
+                            if (!isVisible) setIsVisible(true);
+                          }}
+                          onResizeStop={(_, __, ref, ___, position) => {
+                            setIsVisible(false);
+                            const newWidth = Math.round(
+                              ref.offsetWidth / (cellWidth + GAP)
+                            );
+                            const newHeight = Math.round(
+                              ref.offsetHeight / (cellHeight + GAP)
+                            );
+                            const newCol = Math.round(
+                              position.x / (cellWidth + GAP)
+                            );
+                            const newRow = Math.round(
+                              position.y / (cellHeight + GAP)
+                            );
+
+                            setItems(
+                              items.map((i) => {
+                                if (i.id !== item.id) return i;
+
+                                if (isMobile) {
+                                  return {
+                                    ...i,
+                                    mobile: {
+                                      x: Math.max(
+                                        0,
+                                        Math.min(gridCols - 1, newCol)
+                                      ),
+                                      y: Math.max(
+                                        0,
+                                        Math.min(gridCols - 1, newRow)
+                                      ),
+                                      width: Math.max(
+                                        1,
+                                        Math.min(gridCols - newCol, newWidth)
+                                      ),
+                                      height: Math.max(
+                                        1,
+                                        Math.min(gridCols - newRow, newHeight)
+                                      ),
+                                    },
+                                  };
+                                } else {
+                                  return {
+                                    ...i,
+                                    desktop: {
+                                      x: Math.max(
+                                        0,
+                                        Math.min(gridCols - 1, newCol)
+                                      ),
+                                      y: Math.max(
+                                        0,
+                                        Math.min(gridCols - 1, newRow)
+                                      ),
+                                      width: Math.max(
+                                        1,
+                                        Math.min(gridCols - newCol, newWidth)
+                                      ),
+                                      height: Math.max(
+                                        1,
+                                        Math.min(gridCols - newRow, newHeight)
+                                      ),
+                                    },
+                                  };
+                                }
+                              })
+                            );
+                          }}
+                          dragGrid={[cellWidth + GAP, cellHeight + GAP]}
+                          resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
+                          bounds="parent"
+                          className="absolute"
+                        >
+                          <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
+                        </Rnd>
+                      );
+                    })}
+                </div>
+
+                {/* 섹션 리사이즈 핸들 */}
+                <div
+                  className="h-px border-t border-dashed border-gray-400 hover:border-blue-500 cursor-ns-resize transition-colors mt-4"
+                  onMouseDown={(e) => handleResizeStart(section.id, section, e)}
+                ></div>
+              </div>
             </div>
           </div>
         );
