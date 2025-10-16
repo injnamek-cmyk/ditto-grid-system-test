@@ -27,11 +27,12 @@ type Page = {
 export default function Home() {
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // 고정된 셀 크기 (1080px / 24 rows = 45px per row, gap 8px 고려)
-  const CELL_HEIGHT = (1080 - 8 * 23) / 24; // ≈ 37.67px
+  // 셀 비율 및 간격
+  const CELL_ASPECT_RATIO = 1.6; // 가로:세로 = 1.6:1
   const GAP = 8;
 
   const [cellWidth, setCellWidth] = useState(0);
+  const [cellHeight, setCellHeight] = useState(0);
 
   // 초기 ID 생성
   const initialSectionId = useRef(uuidv4());
@@ -121,7 +122,7 @@ export default function Home() {
 
     const handleMouseMove = (e: MouseEvent) => {
       const deltaY = e.clientY - resizeStartY;
-      const rowHeight = CELL_HEIGHT + GAP;
+      const rowHeight = cellHeight + GAP;
       const deltaRows = Math.round(deltaY / rowHeight);
       const newHeight = Math.max(12, resizeStartHeight + deltaRows); // 최소 12행
 
@@ -143,14 +144,7 @@ export default function Home() {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [
-    resizingSectionId,
-    resizeStartY,
-    resizeStartHeight,
-    CELL_HEIGHT,
-    GAP,
-    sections,
-  ]);
+  }, [resizingSectionId, resizeStartY, resizeStartHeight, cellHeight, GAP, sections]);
 
   // 앱 시작 시 로컬 스토리지에서 페이지 데이터 불러오기
   useEffect(() => {
@@ -169,9 +163,9 @@ export default function Home() {
     }
   }, []);
 
-  // 셀 너비 계산 (높이는 고정)
+  // 셀 너비와 높이 계산 (비율 1.6:1 유지)
   useEffect(() => {
-    const updateCellWidth = () => {
+    const updateCellSize = () => {
       if (gridRef.current) {
         // 화면 너비에 따라 컬럼 수 조정
         const width = window.innerWidth;
@@ -181,24 +175,27 @@ export default function Home() {
         setGridCols(cols);
         setIsMobile(mobile);
 
-        // 실제 그리드 셀 하나의 크기를 측정
+        // 실제 그리드 셀 하나의 너비를 측정
         const firstCell = gridRef.current.querySelector(
           '[data-row="0"][data-col="0"]'
         ) as HTMLElement;
         if (firstCell) {
           const calculatedCellWidth = firstCell.offsetWidth;
+          const calculatedCellHeight = calculatedCellWidth / CELL_ASPECT_RATIO;
+
           setCellWidth(calculatedCellWidth);
+          setCellHeight(calculatedCellHeight);
         }
       }
     };
 
     // 초기 로드와 리사이즈 시 약간의 지연을 두고 측정 (DOM이 완전히 렌더링된 후)
-    updateCellWidth();
-    setTimeout(updateCellWidth, 100);
+    updateCellSize();
+    setTimeout(updateCellSize, 100);
 
-    window.addEventListener("resize", updateCellWidth);
-    return () => window.removeEventListener("resize", updateCellWidth);
-  }, []);
+    window.addEventListener("resize", updateCellSize);
+    return () => window.removeEventListener("resize", updateCellSize);
+  }, [CELL_ASPECT_RATIO]);
 
   return (
     <div className="max-w-[1920px] mx-auto min-h-screen p-4 bg-gray-50 relative">
@@ -252,9 +249,9 @@ export default function Home() {
                   isSelected ? "ring-2 ring-blue-500 ring-offset-2" : ""
                 }`}
                 style={{
-                  gridTemplateRows: `repeat(${section.height}, ${CELL_HEIGHT}px)`,
+                  gridTemplateRows: `repeat(${section.height}, ${cellHeight}px)`,
                   height: `${
-                    section.height * CELL_HEIGHT + (section.height - 1) * GAP
+                    section.height * cellHeight + (section.height - 1) * GAP
                   }px`,
                 }}
               >
@@ -280,14 +277,14 @@ export default function Home() {
                         key={item.id}
                         position={{
                           x: currentItem.x * (cellWidth + GAP),
-                          y: currentItem.y * (CELL_HEIGHT + GAP),
+                          y: currentItem.y * (cellHeight + GAP),
                         }}
                         size={{
                           width:
                             currentItem.width * cellWidth +
                             (currentItem.width - 1) * GAP,
                           height:
-                            currentItem.height * CELL_HEIGHT +
+                            currentItem.height * cellHeight +
                             (currentItem.height - 1) * GAP,
                         }}
                         onDragStart={() => setIsVisible(true)}
@@ -297,7 +294,7 @@ export default function Home() {
                         onDragStop={(_, d) => {
                           setIsVisible(false);
                           const newCol = Math.round(d.x / (cellWidth + GAP));
-                          const newRow = Math.round(d.y / (CELL_HEIGHT + GAP));
+                          const newRow = Math.round(d.y / (cellHeight + GAP));
 
                           setItems(
                             items.map((i) => {
@@ -347,13 +344,13 @@ export default function Home() {
                             ref.offsetWidth / (cellWidth + GAP)
                           );
                           const newHeight = Math.round(
-                            ref.offsetHeight / (CELL_HEIGHT + GAP)
+                            ref.offsetHeight / (cellHeight + GAP)
                           );
                           const newCol = Math.round(
                             position.x / (cellWidth + GAP)
                           );
                           const newRow = Math.round(
-                            position.y / (CELL_HEIGHT + GAP)
+                            position.y / (cellHeight + GAP)
                           );
 
                           setItems(
@@ -408,8 +405,8 @@ export default function Home() {
                             })
                           );
                         }}
-                        dragGrid={[cellWidth + GAP, CELL_HEIGHT + GAP]}
-                        resizeGrid={[cellWidth + GAP, CELL_HEIGHT + GAP]}
+                        dragGrid={[cellWidth + GAP, cellHeight + GAP]}
+                        resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
                         bounds="parent"
                         className="absolute"
                       >
