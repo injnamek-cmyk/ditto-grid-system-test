@@ -527,6 +527,7 @@ export default function Home() {
                             resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
                             bounds="parent"
                             className="absolute"
+                            enableUserSelectHack={false}
                           >
                             <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
                           </Rnd>
