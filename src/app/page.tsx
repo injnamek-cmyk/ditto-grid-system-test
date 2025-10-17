@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from "uuid";
 type Section = {
   id: string;
   height: number; // 행 개수
+  backgroundColor: string; // 배경색
+  isGridVisible: boolean; // 그리드 가시성
 };
 
 type Item = {
@@ -40,7 +42,7 @@ export default function Home() {
 
   // 섹션 관리
   const [sections, setSections] = useState<Section[]>([
-    { id: initialSectionId.current, height: 24 },
+    { id: initialSectionId.current, height: 24, backgroundColor: "#ffffff", isGridVisible: false },
   ]);
 
   // 아이템 관리
@@ -56,7 +58,6 @@ export default function Home() {
   // 반응형 그리드 컬럼 수 설정
   const [gridCols, setGridCols] = useState(24);
   const [isMobile, setIsMobile] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
 
   // 선택된 섹션 관리
   const [selectedSectionId, setSelectedSectionId] = useState<string>(
@@ -75,6 +76,8 @@ export default function Home() {
     const newSection: Section = {
       id: uuidv4(),
       height: 24,
+      backgroundColor: "#ffffff",
+      isGridVisible: false,
     };
     setSections([...sections, newSection]);
   };
@@ -88,6 +91,18 @@ export default function Home() {
       mobile: { x: 0, y: 0, width: 2, height: 2 },
     };
     setItems([...items, newItem]);
+  };
+
+  // 섹션 배경색 변경 함수
+  const changeSectionBackgroundColor = (
+    sectionId: string,
+    color: string
+  ) => {
+    setSections(
+      sections.map((s) =>
+        s.id === sectionId ? { ...s, backgroundColor: color } : s
+      )
+    );
   };
 
   // 페이지 저장 함수
@@ -228,6 +243,7 @@ export default function Home() {
           <div
             key={section.id}
             className={`w-full py-2 relative cursor-pointer transition-all group`}
+            style={{ backgroundColor: section.backgroundColor }}
             onClick={() => setSelectedSectionId(section.id)}
           >
             {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
@@ -251,6 +267,32 @@ export default function Home() {
             )}
 
             <div className="max-w-[1920px] mx-auto px-4">
+              {/* 선택된 섹션에 컬러 피커 표시 */}
+              {isSelected && (
+                <div className="mb-4 flex items-center gap-2 bg-white p-3 rounded-lg shadow-md border border-gray-200">
+                  <label className="text-sm font-medium text-gray-700">
+                    배경색:
+                  </label>
+                  <input
+                    type="color"
+                    value={section.backgroundColor}
+                    onChange={(e) =>
+                      changeSectionBackgroundColor(section.id, e.target.value)
+                    }
+                    className="w-12 h-8 rounded cursor-pointer border border-gray-300"
+                  />
+                  <input
+                    type="text"
+                    value={section.backgroundColor}
+                    onChange={(e) =>
+                      changeSectionBackgroundColor(section.id, e.target.value)
+                    }
+                    className="px-2 py-1 text-sm border border-gray-300 rounded w-24"
+                    placeholder="#ffffff"
+                  />
+                </div>
+              )}
+
               <div className="relative">
                 <div
                   ref={sectionIndex === 0 ? gridRef : null}
@@ -267,7 +309,7 @@ export default function Home() {
                     <div
                       key={cell.id}
                       className={`transition-all duration-200 ${
-                        isVisible ? "bg-slate-200/40" : "bg-transparent"
+                        section.isGridVisible ? "bg-slate-200/40" : "bg-transparent"
                       }`}
                       data-row={cell.row}
                       data-col={cell.col}
@@ -294,12 +336,34 @@ export default function Home() {
                               currentItem.height * cellHeight +
                               (currentItem.height - 1) * GAP,
                           }}
-                          onDragStart={() => setIsVisible(true)}
+                          onDragStart={() => {
+                            setSections(
+                              sections.map((s) =>
+                                s.id === section.id
+                                  ? { ...s, isGridVisible: true }
+                                  : s
+                              )
+                            );
+                          }}
                           onDrag={() => {
-                            if (!isVisible) setIsVisible(true);
+                            if (!section.isGridVisible) {
+                              setSections(
+                                sections.map((s) =>
+                                  s.id === section.id
+                                    ? { ...s, isGridVisible: true }
+                                    : s
+                                )
+                              );
+                            }
                           }}
                           onDragStop={(_, d) => {
-                            setIsVisible(false);
+                            setSections(
+                              sections.map((s) =>
+                                s.id === section.id
+                                  ? { ...s, isGridVisible: false }
+                                  : s
+                              )
+                            );
                             const newCol = Math.round(d.x / (cellWidth + GAP));
                             const newRow = Math.round(d.y / (cellHeight + GAP));
 
@@ -341,12 +405,34 @@ export default function Home() {
                               })
                             );
                           }}
-                          onResizeStart={() => setIsVisible(true)}
+                          onResizeStart={() => {
+                            setSections(
+                              sections.map((s) =>
+                                s.id === section.id
+                                  ? { ...s, isGridVisible: true }
+                                  : s
+                              )
+                            );
+                          }}
                           onResize={() => {
-                            if (!isVisible) setIsVisible(true);
+                            if (!section.isGridVisible) {
+                              setSections(
+                                sections.map((s) =>
+                                  s.id === section.id
+                                    ? { ...s, isGridVisible: true }
+                                    : s
+                                )
+                              );
+                            }
                           }}
                           onResizeStop={(_, __, ref, ___, position) => {
-                            setIsVisible(false);
+                            setSections(
+                              sections.map((s) =>
+                                s.id === section.id
+                                  ? { ...s, isGridVisible: false }
+                                  : s
+                              )
+                            );
                             const newWidth = Math.round(
                               ref.offsetWidth / (cellWidth + GAP)
                             );
