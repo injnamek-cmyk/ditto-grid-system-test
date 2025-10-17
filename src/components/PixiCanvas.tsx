@@ -86,7 +86,8 @@ export default function PixiCanvas({
 
   // 캔버스 크기 조정
   useEffect(() => {
-    if (!appRef.current || !isAppReady || cellWidth === 0 || cellHeight === 0) return;
+    if (!appRef.current || !isAppReady || cellWidth === 0 || cellHeight === 0)
+      return;
 
     const app = appRef.current;
     const newWidth = gridCols * (cellWidth + gap) - gap;
@@ -97,7 +98,8 @@ export default function PixiCanvas({
 
   // 아이템 업데이트
   useEffect(() => {
-    if (!appRef.current || !isAppReady || cellWidth === 0 || cellHeight === 0) return;
+    if (!appRef.current || !isAppReady || cellWidth === 0 || cellHeight === 0)
+      return;
 
     const app = appRef.current;
 
@@ -105,10 +107,14 @@ export default function PixiCanvas({
     const createShape = (item: Item): PIXI.Graphics => {
       const graphics = new PIXI.Graphics();
       const currentItem = isMobile ? item.mobile : item.desktop;
-      const color = item.color ? parseInt(item.color.replace("#", ""), 16) : 0x3b82f6;
+      const color = item.color
+        ? parseInt(item.color.replace("#", ""), 16)
+        : 0x3b82f6;
 
-      const width = currentItem.width * cellWidth + (currentItem.width - 1) * gap;
-      const height = currentItem.height * cellHeight + (currentItem.height - 1) * gap;
+      const width =
+        currentItem.width * cellWidth + (currentItem.width - 1) * gap;
+      const height =
+        currentItem.height * cellHeight + (currentItem.height - 1) * gap;
 
       switch (item.type) {
         case "circle":
@@ -138,7 +144,9 @@ export default function PixiCanvas({
       return graphics;
     };
 
-    const shapeItems = items.filter((item) => item.type && item.type !== "default");
+    const shapeItems = items.filter(
+      (item) => item.type && item.type !== "default"
+    );
 
     // 기존 도형 제거
     shapesRef.current.forEach((container, id) => {
@@ -151,7 +159,7 @@ export default function PixiCanvas({
     // 도형 추가 또는 업데이트
     shapeItems.forEach((item) => {
       const currentItem = isMobile ? item.mobile : item.desktop;
-      let container = shapesRef.current.get(item.id);
+      const container = shapesRef.current.get(item.id);
 
       if (!container) {
         // 새 도형 생성
@@ -164,6 +172,19 @@ export default function PixiCanvas({
 
         // 드래그 기능
         let dragData: { x: number; y: number } | null = null;
+
+        const handleDragEnd = () => {
+          if (dragData) {
+            // 그리드에 스냅
+            const snapX = Math.round(newContainer.x / (cellWidth + gap));
+            const snapY = Math.round(newContainer.y / (cellHeight + gap));
+            newContainer.x = snapX * (cellWidth + gap);
+            newContainer.y = snapY * (cellHeight + gap);
+
+            onShapeDragEnd(item.id, snapX, snapY);
+            dragData = null;
+          }
+        };
 
         newContainer.on("pointerdown", (event: PIXI.FederatedPointerEvent) => {
           const pos = event.global;
@@ -179,30 +200,8 @@ export default function PixiCanvas({
           }
         });
 
-        newContainer.on("pointerup", () => {
-          if (dragData) {
-            // 그리드에 스냅
-            const snapX = Math.round(newContainer.x / (cellWidth + gap));
-            const snapY = Math.round(newContainer.y / (cellHeight + gap));
-            newContainer.x = snapX * (cellWidth + gap);
-            newContainer.y = snapY * (cellHeight + gap);
-
-            onShapeDragEnd(item.id, snapX, snapY);
-            dragData = null;
-          }
-        });
-
-        newContainer.on("pointerupoutside", () => {
-          if (dragData) {
-            const snapX = Math.round(newContainer.x / (cellWidth + gap));
-            const snapY = Math.round(newContainer.y / (cellHeight + gap));
-            newContainer.x = snapX * (cellWidth + gap);
-            newContainer.y = snapY * (cellHeight + gap);
-
-            onShapeDragEnd(item.id, snapX, snapY);
-            dragData = null;
-          }
-        });
+        newContainer.on("pointerup", handleDragEnd);
+        newContainer.on("pointerupoutside", handleDragEnd);
 
         // 초기 위치 설정
         newContainer.x = currentItem.x * (cellWidth + gap);
@@ -221,7 +220,16 @@ export default function PixiCanvas({
         container.y = currentItem.y * (cellHeight + gap);
       }
     });
-  }, [items, cellWidth, cellHeight, gap, isMobile, isAppReady, onShapeDragStart, onShapeDragEnd]);
+  }, [
+    items,
+    cellWidth,
+    cellHeight,
+    gap,
+    isMobile,
+    isAppReady,
+    onShapeDragStart,
+    onShapeDragEnd,
+  ]);
 
   return (
     <div

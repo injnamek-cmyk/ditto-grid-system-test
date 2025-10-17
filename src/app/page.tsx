@@ -47,7 +47,12 @@ export default function Home() {
 
   // 섹션 관리
   const [sections, setSections] = useState<Section[]>([
-    { id: initialSectionId.current, height: 24, backgroundColor: "#ffffff", isGridVisible: false },
+    {
+      id: initialSectionId.current,
+      height: 24,
+      backgroundColor: "#ffffff",
+      isGridVisible: false,
+    },
   ]);
 
   // 아이템 관리
@@ -111,25 +116,56 @@ export default function Home() {
     setItems([...items, newShape]);
   };
 
+  // 그리드 가시성 토글 헬퍼
+  const toggleGridVisibility = (sectionId: string, visible: boolean) => {
+    setSections((prevSections) =>
+      prevSections.map((s) =>
+        s.id === sectionId ? { ...s, isGridVisible: visible } : s
+      )
+    );
+  };
+
   // 섹션 배경색 변경 함수
-  const changeSectionBackgroundColor = (
-    sectionId: string,
-    color: string
-  ) => {
-    setSections(
-      sections.map((s) =>
+  const changeSectionBackgroundColor = (sectionId: string, color: string) => {
+    setSections((prevSections) =>
+      prevSections.map((s) =>
         s.id === sectionId ? { ...s, backgroundColor: color } : s
       )
     );
   };
 
-  // 도형 드래그 시작 핸들러
-  const handleShapeDragStart = (sectionId: string, itemId: string) => {
-    setSections(
-      sections.map((s) =>
-        s.id === sectionId ? { ...s, isGridVisible: true } : s
-      )
+  // 아이템 위치 업데이트 헬퍼
+  const updateItemPosition = (
+    itemId: string,
+    newX: number,
+    newY: number,
+    sectionHeight: number
+  ) => {
+    setItems((prevItems) =>
+      prevItems.map((i) => {
+        if (i.id !== itemId) return i;
+
+        const clampedX = Math.max(0, Math.min(gridCols - 1, newX));
+        const clampedY = Math.max(0, Math.min(sectionHeight - 1, newY));
+
+        if (isMobile) {
+          return {
+            ...i,
+            mobile: { ...i.mobile, x: clampedX, y: clampedY },
+          };
+        } else {
+          return {
+            ...i,
+            desktop: { ...i.desktop, x: clampedX, y: clampedY },
+          };
+        }
+      })
     );
+  };
+
+  // 도형 드래그 시작 핸들러
+  const handleShapeDragStart = (sectionId: string) => {
+    toggleGridVisibility(sectionId, true);
   };
 
   // 도형 드래그 종료 핸들러
@@ -139,40 +175,12 @@ export default function Home() {
     newX: number,
     newY: number
   ) => {
-    setSections((prevSections) =>
-      prevSections.map((s) =>
-        s.id === sectionId ? { ...s, isGridVisible: false } : s
-      )
-    );
+    toggleGridVisibility(sectionId, false);
 
-    setItems((prevItems) => {
-      const section = sections.find((s) => s.id === sectionId);
-      if (!section) return prevItems;
-
-      return prevItems.map((i) => {
-        if (i.id !== itemId) return i;
-
-        if (isMobile) {
-          return {
-            ...i,
-            mobile: {
-              ...i.mobile,
-              x: Math.max(0, Math.min(gridCols - 1, newX)),
-              y: Math.max(0, Math.min(section.height - 1, newY)),
-            },
-          };
-        } else {
-          return {
-            ...i,
-            desktop: {
-              ...i.desktop,
-              x: Math.max(0, Math.min(gridCols - 1, newX)),
-              y: Math.max(0, Math.min(section.height - 1, newY)),
-            },
-          };
-        }
-      });
-    });
+    const section = sections.find((s) => s.id === sectionId);
+    if (section) {
+      updateItemPosition(itemId, newX, newY, section.height);
+    }
   };
 
   // 페이지 저장 함수
@@ -211,8 +219,8 @@ export default function Home() {
       const deltaRows = Math.round(deltaY / rowHeight);
       const newHeight = Math.max(12, resizeStartHeight + deltaRows); // 최소 12행
 
-      setSections(
-        sections.map((s) =>
+      setSections((prevSections) =>
+        prevSections.map((s) =>
           s.id === resizingSectionId ? { ...s, height: newHeight } : s
         )
       );
@@ -229,14 +237,7 @@ export default function Home() {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [
-    resizingSectionId,
-    resizeStartY,
-    resizeStartHeight,
-    cellHeight,
-    GAP,
-    sections,
-  ]);
+  }, [resizingSectionId, resizeStartY, resizeStartHeight, cellHeight, GAP]);
 
   // 앱 시작 시 로컬 스토리지에서 페이지 데이터 불러오기
   useEffect(() => {
@@ -379,7 +380,9 @@ export default function Home() {
                     <div
                       key={cell.id}
                       className={`transition-all duration-200 ${
-                        section.isGridVisible ? "bg-slate-200/40" : "bg-transparent"
+                        section.isGridVisible
+                          ? "bg-slate-200/40"
+                          : "bg-transparent"
                       }`}
                       data-row={cell.row}
                       data-col={cell.col}
@@ -397,9 +400,7 @@ export default function Home() {
                       gridCols={gridCols}
                       sectionHeight={section.height}
                       isMobile={isMobile}
-                      onShapeDragStart={(itemId) =>
-                        handleShapeDragStart(section.id, itemId)
-                      }
+                      onShapeDragStart={() => handleShapeDragStart(section.id)}
                       onShapeDragEnd={(itemId, newX, newY) =>
                         handleShapeDragEnd(section.id, itemId, newX, newY)
                       }
@@ -408,195 +409,129 @@ export default function Home() {
 
                   {/* 섹션 내 아이템들 (default 타입만) */}
                   {cellWidth > 0 &&
-                    sectionItems.filter((item) => !item.type || item.type === "default").map((item) => {
-                      const currentItem = isMobile ? item.mobile : item.desktop;
+                    sectionItems
+                      .filter((item) => !item.type || item.type === "default")
+                      .map((item) => {
+                        const currentItem = isMobile
+                          ? item.mobile
+                          : item.desktop;
 
-                      return (
-                        <Rnd
-                          key={item.id}
-                          position={{
-                            x: currentItem.x * (cellWidth + GAP),
-                            y: currentItem.y * (cellHeight + GAP),
-                          }}
-                          size={{
-                            width:
-                              currentItem.width * cellWidth +
-                              (currentItem.width - 1) * GAP,
-                            height:
-                              currentItem.height * cellHeight +
-                              (currentItem.height - 1) * GAP,
-                          }}
-                          onDragStart={() => {
-                            setSections(
-                              sections.map((s) =>
-                                s.id === section.id
-                                  ? { ...s, isGridVisible: true }
-                                  : s
-                              )
-                            );
-                          }}
-                          onDrag={() => {
-                            if (!section.isGridVisible) {
-                              setSections(
-                                sections.map((s) =>
-                                  s.id === section.id
-                                    ? { ...s, isGridVisible: true }
-                                    : s
-                                )
-                              );
+                        return (
+                          <Rnd
+                            key={item.id}
+                            position={{
+                              x: currentItem.x * (cellWidth + GAP),
+                              y: currentItem.y * (cellHeight + GAP),
+                            }}
+                            size={{
+                              width:
+                                currentItem.width * cellWidth +
+                                (currentItem.width - 1) * GAP,
+                              height:
+                                currentItem.height * cellHeight +
+                                (currentItem.height - 1) * GAP,
+                            }}
+                            onDragStart={() =>
+                              toggleGridVisibility(section.id, true)
                             }
-                          }}
-                          onDragStop={(_, d) => {
-                            setSections((prevSections) =>
-                              prevSections.map((s) =>
-                                s.id === section.id
-                                  ? { ...s, isGridVisible: false }
-                                  : s
-                              )
-                            );
-                            const newCol = Math.round(d.x / (cellWidth + GAP));
-                            const newRow = Math.round(d.y / (cellHeight + GAP));
-
-                            setItems((prevItems) =>
-                              prevItems.map((i) => {
-                                if (i.id !== item.id) return i;
-
-                                if (isMobile) {
-                                  return {
-                                    ...i,
-                                    mobile: {
-                                      ...i.mobile,
-                                      x: Math.max(
-                                        0,
-                                        Math.min(gridCols - 1, newCol)
-                                      ),
-                                      y: Math.max(
-                                        0,
-                                        Math.min(section.height - 1, newRow)
-                                      ),
-                                    },
-                                  };
-                                } else {
-                                  return {
-                                    ...i,
-                                    desktop: {
-                                      ...i.desktop,
-                                      x: Math.max(
-                                        0,
-                                        Math.min(gridCols - 1, newCol)
-                                      ),
-                                      y: Math.max(
-                                        0,
-                                        Math.min(section.height - 1, newRow)
-                                      ),
-                                    },
-                                  };
-                                }
-                              })
-                            );
-                          }}
-                          onResizeStart={() => {
-                            setSections(
-                              sections.map((s) =>
-                                s.id === section.id
-                                  ? { ...s, isGridVisible: true }
-                                  : s
-                              )
-                            );
-                          }}
-                          onResize={() => {
-                            if (!section.isGridVisible) {
-                              setSections(
-                                sections.map((s) =>
-                                  s.id === section.id
-                                    ? { ...s, isGridVisible: true }
-                                    : s
-                                )
+                            onDrag={() => {
+                              if (!section.isGridVisible) {
+                                toggleGridVisibility(section.id, true);
+                              }
+                            }}
+                            onDragStop={(_, d) => {
+                              toggleGridVisibility(section.id, false);
+                              const newCol = Math.round(
+                                d.x / (cellWidth + GAP)
                               );
+                              const newRow = Math.round(
+                                d.y / (cellHeight + GAP)
+                              );
+                              updateItemPosition(
+                                item.id,
+                                newCol,
+                                newRow,
+                                section.height
+                              );
+                            }}
+                            onResizeStart={() =>
+                              toggleGridVisibility(section.id, true)
                             }
-                          }}
-                          onResizeStop={(_, __, ref, ___, position) => {
-                            setSections((prevSections) =>
-                              prevSections.map((s) =>
-                                s.id === section.id
-                                  ? { ...s, isGridVisible: false }
-                                  : s
-                              )
-                            );
-                            const newWidth = Math.round(
-                              ref.offsetWidth / (cellWidth + GAP)
-                            );
-                            const newHeight = Math.round(
-                              ref.offsetHeight / (cellHeight + GAP)
-                            );
-                            const newCol = Math.round(
-                              position.x / (cellWidth + GAP)
-                            );
-                            const newRow = Math.round(
-                              position.y / (cellHeight + GAP)
-                            );
+                            onResize={() => {
+                              if (!section.isGridVisible) {
+                                toggleGridVisibility(section.id, true);
+                              }
+                            }}
+                            onResizeStop={(_, __, ref, ___, position) => {
+                              toggleGridVisibility(section.id, false);
 
-                            setItems((prevItems) =>
-                              prevItems.map((i) => {
-                                if (i.id !== item.id) return i;
+                              const newWidth = Math.round(
+                                ref.offsetWidth / (cellWidth + GAP)
+                              );
+                              const newHeight = Math.round(
+                                ref.offsetHeight / (cellHeight + GAP)
+                              );
+                              const newCol = Math.round(
+                                position.x / (cellWidth + GAP)
+                              );
+                              const newRow = Math.round(
+                                position.y / (cellHeight + GAP)
+                              );
 
-                                if (isMobile) {
-                                  return {
-                                    ...i,
-                                    mobile: {
-                                      x: Math.max(
-                                        0,
-                                        Math.min(gridCols - 1, newCol)
-                                      ),
-                                      y: Math.max(
-                                        0,
-                                        Math.min(section.height - 1, newRow)
-                                      ),
-                                      width: Math.max(
-                                        1,
-                                        Math.min(gridCols - newCol, newWidth)
-                                      ),
-                                      height: Math.max(
-                                        1,
-                                        Math.min(section.height - newRow, newHeight)
-                                      ),
-                                    },
-                                  };
-                                } else {
-                                  return {
-                                    ...i,
-                                    desktop: {
-                                      x: Math.max(
-                                        0,
-                                        Math.min(gridCols - 1, newCol)
-                                      ),
-                                      y: Math.max(
-                                        0,
-                                        Math.min(section.height - 1, newRow)
-                                      ),
-                                      width: Math.max(
-                                        1,
-                                        Math.min(gridCols - newCol, newWidth)
-                                      ),
-                                      height: Math.max(
-                                        1,
-                                        Math.min(section.height - newRow, newHeight)
-                                      ),
-                                    },
-                                  };
-                                }
-                              })
-                            );
-                          }}
-                          dragGrid={[cellWidth + GAP, cellHeight + GAP]}
-                          resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
-                          bounds="parent"
-                          className="absolute"
-                        >
-                          <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
-                        </Rnd>
-                      );
-                    })}
+                              setItems((prevItems) =>
+                                prevItems.map((i) => {
+                                  if (i.id !== item.id) return i;
+
+                                  const clampedX = Math.max(
+                                    0,
+                                    Math.min(gridCols - 1, newCol)
+                                  );
+                                  const clampedY = Math.max(
+                                    0,
+                                    Math.min(section.height - 1, newRow)
+                                  );
+                                  const clampedWidth = Math.max(
+                                    1,
+                                    Math.min(gridCols - newCol, newWidth)
+                                  );
+                                  const clampedHeight = Math.max(
+                                    1,
+                                    Math.min(section.height - newRow, newHeight)
+                                  );
+
+                                  if (isMobile) {
+                                    return {
+                                      ...i,
+                                      mobile: {
+                                        x: clampedX,
+                                        y: clampedY,
+                                        width: clampedWidth,
+                                        height: clampedHeight,
+                                      },
+                                    };
+                                  } else {
+                                    return {
+                                      ...i,
+                                      desktop: {
+                                        x: clampedX,
+                                        y: clampedY,
+                                        width: clampedWidth,
+                                        height: clampedHeight,
+                                      },
+                                    };
+                                  }
+                                })
+                              );
+                            }}
+                            dragGrid={[cellWidth + GAP, cellHeight + GAP]}
+                            resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
+                            bounds="parent"
+                            className="absolute"
+                          >
+                            <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
+                          </Rnd>
+                        );
+                      })}
                 </div>
 
                 {/* 섹션 리사이즈 핸들 */}
@@ -679,8 +614,7 @@ export default function Home() {
           className="w-12 h-12 bg-green-500 text-white shadow-lg hover:shadow-xl hover:bg-green-600 transition-all flex items-center justify-center border-2 border-green-600"
           title="삼각형 추가"
           style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}
-        >
-        </button>
+        ></button>
         <button
           onClick={() => addShape("rectangle")}
           className="w-12 h-12 bg-purple-500 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-purple-600 transition-all flex items-center justify-center border-2 border-purple-600"
