@@ -382,7 +382,7 @@ export default function Home() {
                                       ),
                                       y: Math.max(
                                         0,
-                                        Math.min(gridCols - 1, newRow)
+                                        Math.min(section.height - 1, newRow)
                                       ),
                                     },
                                   };
@@ -397,7 +397,7 @@ export default function Home() {
                                       ),
                                       y: Math.max(
                                         0,
-                                        Math.min(gridCols - 1, newRow)
+                                        Math.min(section.height - 1, newRow)
                                       ),
                                     },
                                   };
@@ -460,7 +460,7 @@ export default function Home() {
                                       ),
                                       y: Math.max(
                                         0,
-                                        Math.min(gridCols - 1, newRow)
+                                        Math.min(section.height - 1, newRow)
                                       ),
                                       width: Math.max(
                                         1,
@@ -468,7 +468,7 @@ export default function Home() {
                                       ),
                                       height: Math.max(
                                         1,
-                                        Math.min(gridCols - newRow, newHeight)
+                                        Math.min(section.height - newRow, newHeight)
                                       ),
                                     },
                                   };
@@ -482,7 +482,7 @@ export default function Home() {
                                       ),
                                       y: Math.max(
                                         0,
-                                        Math.min(gridCols - 1, newRow)
+                                        Math.min(section.height - 1, newRow)
                                       ),
                                       width: Math.max(
                                         1,
@@ -490,7 +490,7 @@ export default function Home() {
                                       ),
                                       height: Math.max(
                                         1,
-                                        Math.min(gridCols - newRow, newHeight)
+                                        Math.min(section.height - newRow, newHeight)
                                       ),
                                     },
                                   };
