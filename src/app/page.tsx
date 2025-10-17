@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Rnd } from "react-rnd";
 import { v4 as uuidv4 } from "uuid";
+import PixiCanvas from "@/components/PixiCanvas";
 
 type Section = {
   id: string;
@@ -11,9 +12,13 @@ type Section = {
   isGridVisible: boolean; // 그리드 가시성
 };
 
+type ItemType = "default" | "circle" | "triangle" | "rectangle";
+
 type Item = {
   id: string;
   sectionId: string;
+  type?: ItemType; // 아이템 타입 (옵셔널)
+  color?: string; // 도형 색상 (옵셔널)
   desktop: { x: number; y: number; width: number; height: number };
   mobile: { x: number; y: number; width: number; height: number };
 };
@@ -93,6 +98,19 @@ export default function Home() {
     setItems([...items, newItem]);
   };
 
+  // 도형 추가 함수
+  const addShape = (shapeType: "circle" | "triangle" | "rectangle") => {
+    const newShape: Item = {
+      id: uuidv4(),
+      sectionId: selectedSectionId,
+      type: shapeType,
+      color: "#3b82f6", // 파란색 기본값
+      desktop: { x: 0, y: 0, width: 3, height: 3 },
+      mobile: { x: 0, y: 0, width: 3, height: 3 },
+    };
+    setItems([...items, newShape]);
+  };
+
   // 섹션 배경색 변경 함수
   const changeSectionBackgroundColor = (
     sectionId: string,
@@ -103,6 +121,58 @@ export default function Home() {
         s.id === sectionId ? { ...s, backgroundColor: color } : s
       )
     );
+  };
+
+  // 도형 드래그 시작 핸들러
+  const handleShapeDragStart = (sectionId: string, itemId: string) => {
+    setSections(
+      sections.map((s) =>
+        s.id === sectionId ? { ...s, isGridVisible: true } : s
+      )
+    );
+  };
+
+  // 도형 드래그 종료 핸들러
+  const handleShapeDragEnd = (
+    sectionId: string,
+    itemId: string,
+    newX: number,
+    newY: number
+  ) => {
+    setSections((prevSections) =>
+      prevSections.map((s) =>
+        s.id === sectionId ? { ...s, isGridVisible: false } : s
+      )
+    );
+
+    setItems((prevItems) => {
+      const section = sections.find((s) => s.id === sectionId);
+      if (!section) return prevItems;
+
+      return prevItems.map((i) => {
+        if (i.id !== itemId) return i;
+
+        if (isMobile) {
+          return {
+            ...i,
+            mobile: {
+              ...i.mobile,
+              x: Math.max(0, Math.min(gridCols - 1, newX)),
+              y: Math.max(0, Math.min(section.height - 1, newY)),
+            },
+          };
+        } else {
+          return {
+            ...i,
+            desktop: {
+              ...i.desktop,
+              x: Math.max(0, Math.min(gridCols - 1, newX)),
+              y: Math.max(0, Math.min(section.height - 1, newY)),
+            },
+          };
+        }
+      });
+    });
   };
 
   // 페이지 저장 함수
@@ -316,9 +386,29 @@ export default function Home() {
                     />
                   ))}
 
-                  {/* 섹션 내 아이템들 */}
+                  {/* Pixi.js 도형 캔버스 */}
+                  {cellWidth > 0 && (
+                    <PixiCanvas
+                      sectionId={section.id}
+                      items={sectionItems}
+                      cellWidth={cellWidth}
+                      cellHeight={cellHeight}
+                      gap={GAP}
+                      gridCols={gridCols}
+                      sectionHeight={section.height}
+                      isMobile={isMobile}
+                      onShapeDragStart={(itemId) =>
+                        handleShapeDragStart(section.id, itemId)
+                      }
+                      onShapeDragEnd={(itemId, newX, newY) =>
+                        handleShapeDragEnd(section.id, itemId, newX, newY)
+                      }
+                    />
+                  )}
+
+                  {/* 섹션 내 아이템들 (default 타입만) */}
                   {cellWidth > 0 &&
-                    sectionItems.map((item) => {
+                    sectionItems.filter((item) => !item.type || item.type === "default").map((item) => {
                       const currentItem = isMobile ? item.mobile : item.desktop;
 
                       return (
@@ -357,8 +447,8 @@ export default function Home() {
                             }
                           }}
                           onDragStop={(_, d) => {
-                            setSections(
-                              sections.map((s) =>
+                            setSections((prevSections) =>
+                              prevSections.map((s) =>
                                 s.id === section.id
                                   ? { ...s, isGridVisible: false }
                                   : s
@@ -367,8 +457,8 @@ export default function Home() {
                             const newCol = Math.round(d.x / (cellWidth + GAP));
                             const newRow = Math.round(d.y / (cellHeight + GAP));
 
-                            setItems(
-                              items.map((i) => {
+                            setItems((prevItems) =>
+                              prevItems.map((i) => {
                                 if (i.id !== item.id) return i;
 
                                 if (isMobile) {
@@ -426,8 +516,8 @@ export default function Home() {
                             }
                           }}
                           onResizeStop={(_, __, ref, ___, position) => {
-                            setSections(
-                              sections.map((s) =>
+                            setSections((prevSections) =>
+                              prevSections.map((s) =>
                                 s.id === section.id
                                   ? { ...s, isGridVisible: false }
                                   : s
@@ -446,8 +536,8 @@ export default function Home() {
                               position.y / (cellHeight + GAP)
                             );
 
-                            setItems(
-                              items.map((i) => {
+                            setItems((prevItems) =>
+                              prevItems.map((i) => {
                                 if (i.id !== item.id) return i;
 
                                 if (isMobile) {
@@ -575,6 +665,28 @@ export default function Home() {
           title="아이템 추가"
         >
           +
+        </button>
+        {/* 도형 추가 버튼들 */}
+        <button
+          onClick={() => addShape("circle")}
+          className="w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:shadow-xl hover:bg-blue-600 transition-all flex items-center justify-center border-2 border-blue-600"
+          title="동그라미 추가"
+        >
+          ●
+        </button>
+        <button
+          onClick={() => addShape("triangle")}
+          className="w-12 h-12 bg-green-500 text-white shadow-lg hover:shadow-xl hover:bg-green-600 transition-all flex items-center justify-center border-2 border-green-600"
+          title="삼각형 추가"
+          style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}
+        >
+        </button>
+        <button
+          onClick={() => addShape("rectangle")}
+          className="w-12 h-12 bg-purple-500 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-purple-600 transition-all flex items-center justify-center border-2 border-purple-600"
+          title="사각형 추가"
+        >
+          ▪
         </button>
       </div>
     </div>
