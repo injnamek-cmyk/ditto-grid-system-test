@@ -268,12 +268,15 @@ export default function Home() {
         setGridCols(cols);
         setIsMobile(mobile);
 
-        // 실제 그리드 셀 하나의 너비를 측정
+        // CSS Grid가 실제로 렌더링한 셀 크기를 측정
         const firstCell = gridRef.current.querySelector(
           '[data-row="0"][data-col="0"]'
         ) as HTMLElement;
         if (firstCell) {
-          const calculatedCellWidth = firstCell.offsetWidth;
+          // getBoundingClientRect()로 브라우저가 최종 계산한 실제 셀 너비를 가져옴
+          const rect = firstCell.getBoundingClientRect();
+          const calculatedCellWidth = rect.width;
+          // 비율을 유지하여 높이 계산
           const calculatedCellHeight = calculatedCellWidth / CELL_ASPECT_RATIO;
 
           setCellWidth(calculatedCellWidth);
@@ -282,12 +285,29 @@ export default function Home() {
       }
     };
 
-    // 초기 로드와 리사이즈 시 약간의 지연을 두고 측정 (DOM이 완전히 렌더링된 후)
-    updateCellSize();
-    setTimeout(updateCellSize, 100);
+    // ResizeObserver로 그리드가 실제로 리사이즈될 때마다 측정
+    let resizeObserver: ResizeObserver | null = null;
 
+    if (gridRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        // requestAnimationFrame으로 브라우저가 레이아웃 계산을 마친 후 측정
+        requestAnimationFrame(updateCellSize);
+      });
+      resizeObserver.observe(gridRef.current);
+    }
+
+    // 초기 측정
+    updateCellSize();
+
+    // window resize도 감지 (ResizeObserver의 백업)
     window.addEventListener("resize", updateCellSize);
-    return () => window.removeEventListener("resize", updateCellSize);
+
+    return () => {
+      window.removeEventListener("resize", updateCellSize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
   }, [CELL_ASPECT_RATIO]);
 
   return (
