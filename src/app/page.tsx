@@ -12,7 +12,7 @@ type Section = {
   isGridVisible: boolean; // 그리드 가시성
 };
 
-type ItemType = "default" | "circle" | "triangle" | "rectangle";
+type ItemType = "default" | "circle" | "triangle" | "rectangle" | "button";
 
 type Item = {
   id: string;
@@ -114,6 +114,18 @@ export default function Home() {
       mobile: { x: 0, y: 0, width: 3, height: 3 },
     };
     setItems([...items, newShape]);
+  };
+
+  // 버튼 추가 함수
+  const addButton = () => {
+    const newButton: Item = {
+      id: uuidv4(),
+      sectionId: selectedSectionId,
+      type: "button",
+      desktop: { x: 0, y: 0, width: 3, height: 2 },
+      mobile: { x: 0, y: 0, width: 2, height: 1 },
+    };
+    setItems([...items, newButton]);
   };
 
   // 그리드 가시성 토글 헬퍼
@@ -427,10 +439,15 @@ export default function Home() {
                     />
                   )}
 
-                  {/* 섹션 내 아이템들 (default 타입만) */}
+                  {/* 섹션 내 아이템들 (도형 제외) */}
                   {cellWidth > 0 &&
                     sectionItems
-                      .filter((item) => !item.type || item.type === "default")
+                      .filter(
+                        (item) =>
+                          item.type !== "circle" &&
+                          item.type !== "triangle" &&
+                          item.type !== "rectangle"
+                      )
                       .map((item) => {
                         const currentItem = isMobile
                           ? item.mobile
@@ -549,7 +566,13 @@ export default function Home() {
                             className="absolute"
                             enableUserSelectHack={false}
                           >
-                            <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
+                            {item.type === "button" ? (
+                              <button className="w-full h-full bg-blue-500 hover:bg-blue-600 text-white rounded-md cursor-move flex items-center justify-center text-sm font-semibold shadow-md hover:shadow-lg transition-all border border-blue-600">
+                                Button
+                              </button>
+                            ) : (
+                              <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
+                            )}
                           </Rnd>
                         );
                       })}
@@ -642,6 +665,13 @@ export default function Home() {
           title="사각형 추가"
         >
           ▪
+        </button>
+        <button
+          onClick={addButton}
+          className="w-12 h-12 bg-orange-500 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-orange-600 transition-all flex items-center justify-center border-2 border-orange-600 text-xs font-semibold"
+          title="버튼 추가"
+        >
+          BTN
         </button>
       </div>
     </div>
