@@ -2,21 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
-
-type ItemType = "default" | "circle" | "triangle" | "rectangle";
-
-type Item = {
-  id: string;
-  sectionId: string;
-  type?: ItemType;
-  color?: string;
-  desktop: { x: number; y: number; width: number; height: number };
-  mobile: { x: number; y: number; width: number; height: number };
-};
+import { ShapeItem } from "@/types/item";
 
 type PixiCanvasProps = {
   sectionId: string;
-  items: Item[];
+  items: ShapeItem[];
   cellWidth: number;
   cellHeight: number;
   gap: number;
@@ -104,7 +94,7 @@ export default function PixiCanvas({
     const app = appRef.current;
 
     // 도형 생성 함수 (useEffect 내부에서 정의하여 최신 cellWidth/cellHeight 참조)
-    const createShape = (item: Item): PIXI.Graphics => {
+    const createShape = (item: ShapeItem): PIXI.Graphics => {
       const graphics = new PIXI.Graphics();
       const currentItem = isMobile ? item.mobile : item.desktop;
       const color = item.color
@@ -144,20 +134,16 @@ export default function PixiCanvas({
       return graphics;
     };
 
-    const shapeItems = items.filter(
-      (item) => item.type && item.type !== "default"
-    );
-
     // 기존 도형 제거
     shapesRef.current.forEach((container, id) => {
-      if (!shapeItems.find((item) => item.id === id)) {
+      if (!items.find((item) => item.id === id)) {
         app.stage.removeChild(container);
         shapesRef.current.delete(id);
       }
     });
 
     // 도형 추가 또는 업데이트
-    shapeItems.forEach((item) => {
+    items.forEach((item) => {
       const currentItem = isMobile ? item.mobile : item.desktop;
       const container = shapesRef.current.get(item.id);
 

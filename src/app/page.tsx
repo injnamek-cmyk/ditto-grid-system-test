@@ -4,23 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { Rnd } from "react-rnd";
 import { v4 as uuidv4 } from "uuid";
 import PixiCanvas from "@/components/PixiCanvas";
+import { Item, ShapeItem } from "@/types/item";
 
 type Section = {
   id: string;
   height: number; // 행 개수
   backgroundColor: string; // 배경색
   isGridVisible: boolean; // 그리드 가시성
-};
-
-type ItemType = "default" | "circle" | "triangle" | "rectangle" | "button";
-
-type Item = {
-  id: string;
-  sectionId: string;
-  type?: ItemType; // 아이템 타입 (옵셔널)
-  color?: string; // 도형 색상 (옵셔널)
-  desktop: { x: number; y: number; width: number; height: number };
-  mobile: { x: number; y: number; width: number; height: number };
 };
 
 type Page = {
@@ -425,7 +415,12 @@ export default function Home() {
                   {cellWidth > 0 && (
                     <PixiCanvas
                       sectionId={section.id}
-                      items={sectionItems}
+                      items={sectionItems.filter(
+                        (item): item is ShapeItem =>
+                          item.type === "circle" ||
+                          item.type === "triangle" ||
+                          item.type === "rectangle"
+                      )}
                       cellWidth={cellWidth}
                       cellHeight={cellHeight}
                       gap={GAP}
