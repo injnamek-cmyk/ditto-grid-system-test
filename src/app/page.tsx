@@ -11,12 +11,12 @@ type Section = {
   height: number; // 행 개수
   backgroundColor: string; // 배경색
   isGridVisible: boolean; // 그리드 가시성
+  items: Item[]; // 이 섹션에 속한 아이템들
 };
 
 type Page = {
   id: string;
   sections: Section[];
-  items: Item[];
   createdAt: string;
   updatedAt: string;
 };
@@ -35,23 +35,20 @@ export default function Home() {
   const initialSectionId = useRef(uuidv4());
   const initialItemId = useRef(uuidv4());
 
-  // 섹션 관리
+  // 섹션 관리 (items도 포함)
   const [sections, setSections] = useState<Section[]>([
     {
       id: initialSectionId.current,
       height: 24,
       backgroundColor: "#ffffff",
       isGridVisible: false,
-    },
-  ]);
-
-  // 아이템 관리
-  const [items, setItems] = useState<Item[]>([
-    {
-      id: initialItemId.current,
-      sectionId: initialSectionId.current,
-      desktop: { x: 0, y: 0, width: 1, height: 1 },
-      mobile: { x: 0, y: 0, width: 1, height: 1 },
+      items: [
+        {
+          id: initialItemId.current,
+          desktop: { x: 0, y: 0, width: 1, height: 1 },
+          mobile: { x: 0, y: 0, width: 1, height: 1 },
+        },
+      ],
     },
   ]);
 
@@ -78,6 +75,7 @@ export default function Home() {
       height: 24,
       backgroundColor: "#ffffff",
       isGridVisible: false,
+      items: [],
     };
     setSections([...sections, newSection]);
   };
@@ -86,36 +84,47 @@ export default function Home() {
   const addItem = () => {
     const newItem: Item = {
       id: uuidv4(),
-      sectionId: selectedSectionId,
       desktop: { x: 0, y: 0, width: 2, height: 2 },
       mobile: { x: 0, y: 0, width: 2, height: 2 },
     };
-    setItems([...items, newItem]);
+    setSections((prevSections) =>
+      prevSections.map((s) =>
+        s.id === selectedSectionId ? { ...s, items: [...s.items, newItem] } : s
+      )
+    );
   };
 
   // 도형 추가 함수
   const addShape = (shapeType: "circle" | "triangle" | "rectangle") => {
     const newShape: Item = {
       id: uuidv4(),
-      sectionId: selectedSectionId,
       type: shapeType,
       color: "#3b82f6", // 파란색 기본값
       desktop: { x: 0, y: 0, width: 3, height: 3 },
       mobile: { x: 0, y: 0, width: 3, height: 3 },
     };
-    setItems([...items, newShape]);
+    setSections((prevSections) =>
+      prevSections.map((s) =>
+        s.id === selectedSectionId ? { ...s, items: [...s.items, newShape] } : s
+      )
+    );
   };
 
   // 버튼 추가 함수
   const addButton = () => {
     const newButton: Item = {
       id: uuidv4(),
-      sectionId: selectedSectionId,
       type: "button",
       desktop: { x: 0, y: 0, width: 3, height: 2 },
       mobile: { x: 0, y: 0, width: 2, height: 1 },
     };
-    setItems([...items, newButton]);
+    setSections((prevSections) =>
+      prevSections.map((s) =>
+        s.id === selectedSectionId
+          ? { ...s, items: [...s.items, newButton] }
+          : s
+      )
+    );
   };
 
   // 그리드 가시성 토글 헬퍼
@@ -138,29 +147,37 @@ export default function Home() {
 
   // 아이템 위치 업데이트 헬퍼
   const updateItemPosition = (
+    sectionId: string,
     itemId: string,
     newX: number,
     newY: number,
     sectionHeight: number
   ) => {
-    setItems((prevItems) =>
-      prevItems.map((i) => {
-        if (i.id !== itemId) return i;
+    setSections((prevSections) =>
+      prevSections.map((section) => {
+        if (section.id !== sectionId) return section;
 
-        const clampedX = Math.max(0, Math.min(gridCols - 1, newX));
-        const clampedY = Math.max(0, Math.min(sectionHeight - 1, newY));
+        return {
+          ...section,
+          items: section.items.map((i) => {
+            if (i.id !== itemId) return i;
 
-        if (isMobile) {
-          return {
-            ...i,
-            mobile: { ...i.mobile, x: clampedX, y: clampedY },
-          };
-        } else {
-          return {
-            ...i,
-            desktop: { ...i.desktop, x: clampedX, y: clampedY },
-          };
-        }
+            const clampedX = Math.max(0, Math.min(gridCols - 1, newX));
+            const clampedY = Math.max(0, Math.min(sectionHeight - 1, newY));
+
+            if (isMobile) {
+              return {
+                ...i,
+                mobile: { ...i.mobile, x: clampedX, y: clampedY },
+              };
+            } else {
+              return {
+                ...i,
+                desktop: { ...i.desktop, x: clampedX, y: clampedY },
+              };
+            }
+          }),
+        };
       })
     );
   };
@@ -181,7 +198,7 @@ export default function Home() {
 
     const section = sections.find((s) => s.id === sectionId);
     if (section) {
-      updateItemPosition(itemId, newX, newY, section.height);
+      updateItemPosition(sectionId, itemId, newX, newY, section.height);
     }
   };
 
@@ -190,7 +207,6 @@ export default function Home() {
     const page: Page = {
       id: uuidv4(),
       sections,
-      items,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -248,7 +264,6 @@ export default function Home() {
       try {
         const page: Page = JSON.parse(savedPage);
         setSections(page.sections);
-        setItems(page.items);
         if (page.sections.length > 0) {
           setSelectedSectionId(page.sections[0].id);
         }
@@ -325,10 +340,8 @@ export default function Home() {
           }
         );
 
-        // 이 섹션에 속한 아이템들
-        const sectionItems = items.filter(
-          (item) => item.sectionId === section.id
-        );
+        // 이 섹션에 속한 아이템들 (section.items 직접 사용)
+        const sectionItems = section.items;
 
         const isSelected = section.id === selectedSectionId;
 
@@ -480,6 +493,7 @@ export default function Home() {
                                 d.y / (cellHeight + GAP)
                               );
                               updateItemPosition(
+                                section.id,
                                 item.id,
                                 newCol,
                                 newRow,
@@ -510,48 +524,58 @@ export default function Home() {
                                 position.y / (cellHeight + GAP)
                               );
 
-                              setItems((prevItems) =>
-                                prevItems.map((i) => {
-                                  if (i.id !== item.id) return i;
+                              setSections((prevSections) =>
+                                prevSections.map((s) => {
+                                  if (s.id !== section.id) return s;
 
-                                  const clampedX = Math.max(
-                                    0,
-                                    Math.min(gridCols - 1, newCol)
-                                  );
-                                  const clampedY = Math.max(
-                                    0,
-                                    Math.min(section.height - 1, newRow)
-                                  );
-                                  const clampedWidth = Math.max(
-                                    1,
-                                    Math.min(gridCols - newCol, newWidth)
-                                  );
-                                  const clampedHeight = Math.max(
-                                    1,
-                                    Math.min(section.height - newRow, newHeight)
-                                  );
+                                  return {
+                                    ...s,
+                                    items: s.items.map((i) => {
+                                      if (i.id !== item.id) return i;
 
-                                  if (isMobile) {
-                                    return {
-                                      ...i,
-                                      mobile: {
-                                        x: clampedX,
-                                        y: clampedY,
-                                        width: clampedWidth,
-                                        height: clampedHeight,
-                                      },
-                                    };
-                                  } else {
-                                    return {
-                                      ...i,
-                                      desktop: {
-                                        x: clampedX,
-                                        y: clampedY,
-                                        width: clampedWidth,
-                                        height: clampedHeight,
-                                      },
-                                    };
-                                  }
+                                      const clampedX = Math.max(
+                                        0,
+                                        Math.min(gridCols - 1, newCol)
+                                      );
+                                      const clampedY = Math.max(
+                                        0,
+                                        Math.min(section.height - 1, newRow)
+                                      );
+                                      const clampedWidth = Math.max(
+                                        1,
+                                        Math.min(gridCols - newCol, newWidth)
+                                      );
+                                      const clampedHeight = Math.max(
+                                        1,
+                                        Math.min(
+                                          section.height - newRow,
+                                          newHeight
+                                        )
+                                      );
+
+                                      if (isMobile) {
+                                        return {
+                                          ...i,
+                                          mobile: {
+                                            x: clampedX,
+                                            y: clampedY,
+                                            width: clampedWidth,
+                                            height: clampedHeight,
+                                          },
+                                        };
+                                      } else {
+                                        return {
+                                          ...i,
+                                          desktop: {
+                                            x: clampedX,
+                                            y: clampedY,
+                                            width: clampedWidth,
+                                            height: clampedHeight,
+                                          },
+                                        };
+                                      }
+                                    }),
+                                  };
                                 })
                               );
                             }}
