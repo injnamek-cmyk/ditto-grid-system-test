@@ -567,7 +567,7 @@ export default function Home() {
       })}
 
       {/* Floating 버튼들 */}
-      <div className="fixed bottom-6 right-6 flex gap-3">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex gap-3">
         <button
           onClick={savePage}
           className="w-12 h-12 bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200"
