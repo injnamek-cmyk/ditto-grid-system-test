@@ -127,6 +127,23 @@ export default function Home() {
     );
   };
 
+  // 텍스트 추가 함수
+  const addText = () => {
+    const newText: Item = {
+      id: uuidv4(),
+      type: "text",
+      desktop: { x: 0, y: 0, width: 2, height: 1 },
+      mobile: { x: 0, y: 0, width: 2, height: 1 },
+    };
+    setSections((prevSections) =>
+      prevSections.map((s) =>
+        s.id === selectedSectionId
+          ? { ...s, items: [...s.items, newText] }
+          : s
+      )
+    );
+  };
+
   // 그리드 가시성 토글 헬퍼
   const toggleGridVisibility = (sectionId: string, visible: boolean) => {
     setSections((prevSections) =>
@@ -589,6 +606,10 @@ export default function Home() {
                               <button className="w-full h-full bg-blue-500 hover:bg-blue-600 text-white rounded-md cursor-move flex items-center justify-center text-sm font-semibold shadow-md hover:shadow-lg transition-all border border-blue-600">
                                 Button
                               </button>
+                            ) : item.type === "text" ? (
+                              <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-700 text-sm font-normal shadow-md hover:shadow-lg transition-shadow border border-gray-200 px-2">
+                                텍스트 입력
+                              </div>
                             ) : (
                               <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
                             )}
@@ -691,6 +712,13 @@ export default function Home() {
           title="버튼 추가"
         >
           BTN
+        </button>
+        <button
+          onClick={addText}
+          className="w-12 h-12 bg-gray-700 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-gray-800 transition-all flex items-center justify-center border-2 border-gray-800 text-xs font-semibold"
+          title="텍스트 추가"
+        >
+          T
         </button>
       </div>
     </div>

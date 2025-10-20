@@ -1,4 +1,4 @@
-export type ItemType = "default" | "circle" | "triangle" | "rectangle" | "button";
+export type ItemType = "default" | "circle" | "triangle" | "rectangle" | "button" | "text";
 
 export type Item = {
   id: string;
