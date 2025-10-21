@@ -22,7 +22,8 @@ interface UseDragAndDropProps {
     y: number
   ) => void;
   sections: Array<{ id: string; height: number }>;
-  onGridVisibilityChange?: (sectionId: string | null) => void;
+  onShowGrid?: (sectionId: string) => void;
+  onHideGrid?: () => void;
 }
 
 interface UseDragAndDropReturn {
@@ -55,7 +56,8 @@ export const useDragAndDrop = ({
   gridCols,
   addItemAtPosition,
   sections,
-  onGridVisibilityChange,
+  onShowGrid,
+  onHideGrid,
 }: UseDragAndDropProps): UseDragAndDropReturn => {
   const [draggedItemType, setDraggedItemType] = useState<string | null>(null);
   const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
@@ -81,7 +83,7 @@ export const useDragAndDrop = ({
     if (!draggedItemType) return;
 
     // 드래그 중 그리드 가시성 활성화
-    onGridVisibilityChange?.(sectionId);
+    onShowGrid?.(sectionId);
 
     // 마우스 좌표를 그리드 좌표로 변환
     const sectionElement = e.currentTarget;
@@ -114,7 +116,7 @@ export const useDragAndDrop = ({
     // 자식 요소로 나간 것이 아닌 경우에만 초기화
     if (e.currentTarget === e.target) {
       setDragPreview(null);
-      onGridVisibilityChange?.(null);
+      onHideGrid?.();
     }
   };
 
@@ -159,7 +161,7 @@ export const useDragAndDrop = ({
   const resetDragState = () => {
     setDraggedItemType(null);
     setDragPreview(null);
-    onGridVisibilityChange?.(null);
+    onHideGrid?.();
   };
 
   return {

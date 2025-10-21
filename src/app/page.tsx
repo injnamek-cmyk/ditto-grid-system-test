@@ -10,6 +10,7 @@ import { CELL_ASPECT_RATIO, GAP } from "@/constants/grid";
 import { usePageState } from "@/hooks/usePageState";
 import { useSectionResize } from "@/hooks/useSectionResize";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
+import { useGridVisibility } from "@/hooks/useGridVisibility";
 
 export default function Home() {
   const gridRef = useRef<HTMLDivElement>(null);
@@ -20,11 +21,6 @@ export default function Home() {
   // 반응형 그리드 컬럼 수 설정
   const [gridCols, setGridCols] = useState(24);
   const [isMobile, setIsMobile] = useState(false);
-
-  // 그리드 가시성 관리 (드래그/리사이즈 중인 섹션)
-  const [gridVisibleSectionId, setGridVisibleSectionId] = useState<
-    string | null
-  >(null);
 
   // 페이지 상태 관리
   const {
@@ -39,6 +35,14 @@ export default function Home() {
     updateSectionHeight,
     savePage,
   } = usePageState();
+
+  // 그리드 가시성 관리
+  const {
+    gridVisibleSectionId,
+    toggleGridVisibility,
+    showGrid,
+    hideGrid,
+  } = useGridVisibility();
 
   // 섹션 리사이즈 훅
   const {
@@ -60,9 +64,8 @@ export default function Home() {
     gridCols,
     addItemAtPosition,
     sections,
-    onGridVisibilityChange: (sectionId: string | null) => {
-      setGridVisibleSectionId(sectionId);
-    },
+    onShowGrid: showGrid,
+    onHideGrid: hideGrid,
   });
 
   // LNB에서 아이템 추가 헬퍼 함수
@@ -76,11 +79,6 @@ export default function Home() {
 
   const addText = () => {
     addItemAtPosition(selectedSectionId, "text", 0, 0);
-  };
-
-  // 그리드 가시성 토글 헬퍼
-  const toggleGridVisibility = (sectionId: string, visible: boolean) => {
-    setGridVisibleSectionId(visible ? sectionId : null);
   };
 
   // 도형 드래그 시작 핸들러
