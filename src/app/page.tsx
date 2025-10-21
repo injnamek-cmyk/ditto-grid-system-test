@@ -10,7 +10,6 @@ type Section = {
   id: string;
   height: number; // 행 개수
   backgroundColor: string; // 배경색
-  isGridVisible: boolean; // 그리드 가시성
   items: Item[]; // 이 섹션에 속한 아이템들
 };
 
@@ -41,7 +40,6 @@ export default function Home() {
       id: initialSectionId.current,
       height: 24,
       backgroundColor: "#ffffff",
-      isGridVisible: false,
       items: [
         {
           id: initialItemId.current,
@@ -61,6 +59,11 @@ export default function Home() {
     initialSectionId.current
   );
 
+  // 그리드 가시성 관리 (드래그/리사이즈 중인 섹션)
+  const [gridVisibleSectionId, setGridVisibleSectionId] = useState<
+    string | null
+  >(null);
+
   // 섹션 리사이즈 상태
   const [resizingSectionId, setResizingSectionId] = useState<string | null>(
     null
@@ -74,7 +77,6 @@ export default function Home() {
       id: uuidv4(),
       height: 24,
       backgroundColor: "#ffffff",
-      isGridVisible: false,
       items: [],
     };
     setSections([...sections, newSection]);
@@ -146,11 +148,7 @@ export default function Home() {
 
   // 그리드 가시성 토글 헬퍼
   const toggleGridVisibility = (sectionId: string, visible: boolean) => {
-    setSections((prevSections) =>
-      prevSections.map((s) =>
-        s.id === sectionId ? { ...s, isGridVisible: visible } : s
-      )
-    );
+    setGridVisibleSectionId(visible ? sectionId : null);
   };
 
   // 섹션 배경색 변경 함수
@@ -432,7 +430,7 @@ export default function Home() {
                     <div
                       key={cell.id}
                       className={`transition-all duration-200 ${
-                        section.isGridVisible
+                        gridVisibleSectionId === section.id
                           ? "bg-slate-200/40"
                           : "bg-transparent"
                       }`}
@@ -497,7 +495,7 @@ export default function Home() {
                               toggleGridVisibility(section.id, true)
                             }
                             onDrag={() => {
-                              if (!section.isGridVisible) {
+                              if (gridVisibleSectionId !== section.id) {
                                 toggleGridVisibility(section.id, true);
                               }
                             }}
@@ -521,7 +519,7 @@ export default function Home() {
                               toggleGridVisibility(section.id, true)
                             }
                             onResize={() => {
-                              if (!section.isGridVisible) {
+                              if (gridVisibleSectionId !== section.id) {
                                 toggleGridVisibility(section.id, true);
                               }
                             }}
