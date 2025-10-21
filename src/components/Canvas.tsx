@@ -1,14 +1,10 @@
 import Section from "@/components/Section";
 import { Section as SectionType } from "@/hooks/usePageState";
+import { useSectionStore } from "@/store/useSectionStore";
 
 interface CanvasProps {
   sections: SectionType[];
-  selectedSectionId: string;
   gridVisibleSectionId: string | null;
-  cellWidth: number;
-  cellHeight: number;
-  gridCols: number;
-  isMobile: boolean;
   dragPreview: {
     sectionId: string;
     gridX: number;
@@ -17,7 +13,6 @@ interface CanvasProps {
     cellHeight: number;
   } | null;
   gridRef: React.RefObject<HTMLDivElement | null>;
-  onSectionClick: (sectionId: string) => void;
   onBackgroundColorChange: (sectionId: string, color: string) => void;
   onSectionDragOver: (e: React.DragEvent<HTMLDivElement>, sectionId: string, height: number) => void;
   onSectionDragLeave: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -39,15 +34,9 @@ interface CanvasProps {
 
 export default function Canvas({
   sections,
-  selectedSectionId,
   gridVisibleSectionId,
-  cellWidth,
-  cellHeight,
-  gridCols,
-  isMobile,
   dragPreview,
   gridRef,
-  onSectionClick,
   onBackgroundColorChange,
   onSectionDragOver,
   onSectionDragLeave,
@@ -59,6 +48,9 @@ export default function Canvas({
   onItemResizeStop,
   onSectionResizeStart,
 }: CanvasProps) {
+  // Zustand 스토어에서 선택된 섹션 가져오기 (각 상태를 개별적으로 구독)
+  const selectedSectionId = useSectionStore((state) => state.selectedSectionId);
+  const setSelectedSectionId = useSectionStore((state) => state.setSelectedSectionId);
   return (
     <div className="w-full">
       {sections.map((section, sectionIndex) => (
@@ -66,15 +58,11 @@ export default function Canvas({
           key={section.id}
           section={section}
           isSelected={section.id === selectedSectionId}
-          cellWidth={cellWidth}
-          cellHeight={cellHeight}
-          gridCols={gridCols}
           gridVisibleSectionId={gridVisibleSectionId}
-          isMobile={isMobile}
           dragPreview={dragPreview}
           gridRef={sectionIndex === 0 ? gridRef : null}
           sectionIndex={sectionIndex}
-          onSectionClick={onSectionClick}
+          onSectionClick={setSelectedSectionId}
           onBackgroundColorChange={onBackgroundColorChange}
           onSectionDragOver={onSectionDragOver}
           onSectionDragLeave={onSectionDragLeave}

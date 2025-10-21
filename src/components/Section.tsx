@@ -5,15 +5,12 @@ import DragPreview from "@/components/DragPreview";
 import { Section as SectionType } from "@/hooks/usePageState";
 import { ShapeItem } from "@/types/item";
 import { GAP } from "@/constants/grid";
+import { useGridStore } from "@/store/useGridStore";
 
 interface SectionProps {
   section: SectionType;
   isSelected: boolean;
-  cellWidth: number;
-  cellHeight: number;
-  gridCols: number;
   gridVisibleSectionId: string | null;
-  isMobile: boolean;
   dragPreview: {
     sectionId: string;
     gridX: number;
@@ -46,11 +43,7 @@ interface SectionProps {
 export default function Section({
   section,
   isSelected,
-  cellWidth,
-  cellHeight,
-  gridCols,
   gridVisibleSectionId,
-  isMobile,
   dragPreview,
   gridRef,
   sectionIndex,
@@ -66,6 +59,12 @@ export default function Section({
   onItemResizeStop,
   onSectionResizeStart,
 }: SectionProps) {
+  // Zustand 스토어에서 grid 정보 가져오기 (각 상태를 개별적으로 구독)
+  const cellWidth = useGridStore((state) => state.cellWidth);
+  const cellHeight = useGridStore((state) => state.cellHeight);
+  const gridCols = useGridStore((state) => state.gridCols);
+  const isMobile = useGridStore((state) => state.isMobile);
+
   const shapeItems = section.items.filter(
     (item): item is ShapeItem =>
       item.type === "circle" ||
@@ -170,9 +169,6 @@ export default function Section({
             {cellWidth > 0 && (
               <ItemRenderer
                 items={section.items}
-                cellWidth={cellWidth}
-                cellHeight={cellHeight}
-                isMobile={isMobile}
                 gridVisibleSectionId={gridVisibleSectionId}
                 sectionId={section.id}
                 onToggleGridVisibility={onToggleGridVisibility}
@@ -185,8 +181,6 @@ export default function Section({
             <DragPreview
               dragPreview={dragPreview}
               currentSectionId={section.id}
-              cellWidth={cellWidth}
-              cellHeight={cellHeight}
             />
           </div>
 

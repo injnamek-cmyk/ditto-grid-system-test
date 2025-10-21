@@ -9,6 +9,8 @@ import { useSectionResize } from "@/hooks/useSectionResize";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useGridVisibility } from "@/hooks/useGridVisibility";
 import { useGridDimensions } from "@/hooks/useGridDimensions";
+import { useGridStore } from "@/store/useGridStore";
+import { useSectionStore } from "@/store/useSectionStore";
 
 export default function Home() {
   // 반응형 그리드 크기 계산
@@ -23,8 +25,7 @@ export default function Home() {
   // 페이지 상태 관리
   const {
     sections,
-    selectedSectionId,
-    setSelectedSectionId,
+    selectedSectionId: pageSelectedSectionId,
     addSection,
     changeSectionBackgroundColor,
     updateItemPosition,
@@ -33,6 +34,26 @@ export default function Home() {
     updateSectionHeight,
     savePage,
   } = usePageState();
+
+  // Zustand 스토어
+  const setGridDimensions = useGridStore((state) => state.setGridDimensions);
+  const selectedSectionId = useSectionStore((state) => state.selectedSectionId);
+  const setSelectedSectionId = useSectionStore(
+    (state) => state.setSelectedSectionId
+  );
+
+  // 그리드 크기 변경 시 스토어 업데이트
+  useEffect(() => {
+    setGridDimensions(cellWidth, cellHeight, gridCols, isMobile);
+  }, [cellWidth, cellHeight, gridCols, isMobile, setGridDimensions]);
+
+  // 페이지 상태의 선택된 섹션이 변경되면 스토어에도 반영
+  useEffect(() => {
+    if (pageSelectedSectionId) {
+      setSelectedSectionId(pageSelectedSectionId);
+    }
+  }, [pageSelectedSectionId, setSelectedSectionId]);
+
 
   // 그리드 가시성 관리
   const {
@@ -179,15 +200,9 @@ export default function Home() {
         {/* Canvas */}
         <Canvas
           sections={sections}
-          selectedSectionId={selectedSectionId}
           gridVisibleSectionId={gridVisibleSectionId}
-          cellWidth={cellWidth}
-          cellHeight={cellHeight}
-          gridCols={gridCols}
-          isMobile={isMobile}
           dragPreview={dragPreview}
           gridRef={gridRef}
-          onSectionClick={setSelectedSectionId}
           onBackgroundColorChange={changeSectionBackgroundColor}
           onSectionDragOver={handleSectionDragOver}
           onSectionDragLeave={handleSectionDragLeave}

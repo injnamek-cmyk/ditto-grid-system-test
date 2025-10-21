@@ -1,12 +1,10 @@
 import { Rnd } from "react-rnd";
 import { Item } from "@/types/item";
 import { GAP } from "@/constants/grid";
+import { useGridStore } from "@/store/useGridStore";
 
 interface ItemRendererProps {
   items: Item[];
-  cellWidth: number;
-  cellHeight: number;
-  isMobile: boolean;
   gridVisibleSectionId: string | null;
   sectionId: string;
   onToggleGridVisibility: (sectionId: string, visible: boolean) => void;
@@ -28,15 +26,16 @@ interface ItemRendererProps {
 
 export default function ItemRenderer({
   items,
-  cellWidth,
-  cellHeight,
-  isMobile,
   gridVisibleSectionId,
   sectionId,
   onToggleGridVisibility,
   onItemDragStop,
   onItemResizeStop,
 }: ItemRendererProps) {
+  // Zustand 스토어에서 grid 정보 가져오기 (각 상태를 개별적으로 구독)
+  const cellWidth = useGridStore((state) => state.cellWidth);
+  const cellHeight = useGridStore((state) => state.cellHeight);
+  const isMobile = useGridStore((state) => state.isMobile);
   // 섹션 내 아이템들 (도형 제외)
   const nonShapeItems = items.filter(
     (item) =>

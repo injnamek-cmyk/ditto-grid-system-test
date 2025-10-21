@@ -1,4 +1,5 @@
 import { GAP } from "@/constants/grid";
+import { useGridStore } from "@/store/useGridStore";
 
 interface DragPreviewProps {
   dragPreview: {
@@ -9,16 +10,15 @@ interface DragPreviewProps {
     cellHeight: number;
   } | null;
   currentSectionId: string;
-  cellWidth: number;
-  cellHeight: number;
 }
 
 export default function DragPreview({
   dragPreview,
   currentSectionId,
-  cellWidth,
-  cellHeight,
 }: DragPreviewProps) {
+  // Zustand 스토어에서 grid 정보 가져오기 (각 상태를 개별적으로 구독)
+  const cellWidth = useGridStore((state) => state.cellWidth);
+  const cellHeight = useGridStore((state) => state.cellHeight);
   if (!dragPreview || dragPreview.sectionId !== currentSectionId) {
     return null;
   }
