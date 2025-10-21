@@ -6,12 +6,10 @@ import PixiCanvas from "@/components/PixiCanvas";
 import { ShapeItem } from "@/types/item";
 import Header from "@/layouts/Header";
 import LeftNavigationBar from "@/layouts/LeftNavigationBar";
-import { ITEM_GRID_SIZE } from "@/constants/itemConfig";
-import { AddableItemType } from "@/types/item";
 import { CELL_ASPECT_RATIO, GAP } from "@/constants/grid";
 import { usePageState } from "@/hooks/usePageState";
 import { useSectionResize } from "@/hooks/useSectionResize";
-import { getGridCoordinatesFromEvent } from "@/lib/gridCalculations";
+import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 
 export default function Home() {
   const gridRef = useRef<HTMLDivElement>(null);
@@ -27,18 +25,6 @@ export default function Home() {
   const [gridVisibleSectionId, setGridVisibleSectionId] = useState<
     string | null
   >(null);
-
-  // 드래그 중인 아이템 상태 관리
-  const [draggedItemType, setDraggedItemType] = useState<string | null>(null);
-
-  // 드래그 미리보기 상태 (canvas 내에서만 표시)
-  const [dragPreview, setDragPreview] = useState<{
-    sectionId: string;
-    gridX: number;
-    gridY: number;
-    cellWidth: number; // 셀 단위 너비
-    cellHeight: number; // 셀 단위 높이
-  } | null>(null);
 
   // 페이지 상태 관리
   const {
@@ -61,6 +47,24 @@ export default function Home() {
     updateSectionHeight: triggerResize,
   } = useSectionResize(cellHeight);
 
+  // 드래그 앤 드롭 훅
+  const {
+    dragPreview,
+    handleLNBDragStart,
+    handleSectionDragOver,
+    handleSectionDragLeave,
+    handleSectionDrop,
+  } = useDragAndDrop({
+    cellWidth,
+    cellHeight,
+    gridCols,
+    addItemAtPosition,
+    sections,
+    onGridVisibilityChange: (sectionId: string | null) => {
+      setGridVisibleSectionId(sectionId);
+    },
+  });
+
   // LNB에서 아이템 추가 헬퍼 함수
   const addBox = () => {
     addItemAtPosition(selectedSectionId, "box", 0, 0);
@@ -72,107 +76,6 @@ export default function Home() {
 
   const addText = () => {
     addItemAtPosition(selectedSectionId, "text", 0, 0);
-  };
-
-  // LNB 드래그 시작 핸들러
-  const handleLNBDragStart = (
-    e: React.DragEvent<HTMLButtonElement>,
-    itemType: string
-  ) => {
-    setDraggedItemType(itemType);
-
-    // dataTransfer 설정 (LNB 버튼 그 자체가 드래그 이미지)
-    e.dataTransfer.effectAllowed = "copy";
-  };
-
-
-  // 섹션 드래그 오버 핸들러
-  const handleSectionDragOver = (
-    e: React.DragEvent<HTMLDivElement>,
-    sectionId: string,
-    sectionHeight: number
-  ) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "copy";
-
-    if (!draggedItemType) return;
-
-    // 드래그 중 그리드 가시성 활성화
-    setGridVisibleSectionId(sectionId);
-
-    // 마우스 좌표를 그리드 좌표로 변환
-    const sectionElement = e.currentTarget;
-    const coordinates = getGridCoordinatesFromEvent(
-      e,
-      sectionElement,
-      cellWidth,
-      cellHeight,
-      gridCols,
-      sectionHeight
-    );
-
-    if (!coordinates) return;
-
-    // 아이템의 그리드 크기 가져오기
-    const itemSize =
-      ITEM_GRID_SIZE[draggedItemType as AddableItemType];
-
-    // 미리보기 상태 업데이트
-    setDragPreview({
-      sectionId,
-      gridX: coordinates.x,
-      gridY: coordinates.y,
-      cellWidth: itemSize.cellWidth,
-      cellHeight: itemSize.cellHeight,
-    });
-  };
-
-  // 섹션 드래그 리브 핸들러
-  const handleSectionDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    // 자식 요소로 나간 것이 아닌 경우에만 초기화
-    if (e.currentTarget === e.target) {
-      setDragPreview(null);
-      setGridVisibleSectionId(null);
-    }
-  };
-
-  // 섹션 드롭 핸들러
-  const handleSectionDrop = (
-    e: React.DragEvent<HTMLDivElement>,
-    sectionId: string
-  ) => {
-    e.preventDefault();
-
-    if (!draggedItemType) return;
-
-    // 마우스 좌표를 그리드 좌표로 변환
-    const sectionElement = e.currentTarget;
-    const section = sections.find((s) => s.id === sectionId);
-    if (!section) return;
-
-    const coordinates = getGridCoordinatesFromEvent(
-      e,
-      sectionElement,
-      cellWidth,
-      cellHeight,
-      gridCols,
-      section.height
-    );
-
-    if (!coordinates) return;
-
-    // 드롭한 위치에 아이템 추가
-    addItemAtPosition(
-      sectionId,
-      draggedItemType as AddableItemType,
-      coordinates.x,
-      coordinates.y
-    );
-
-    // 드래그 상태 초기화
-    setDraggedItemType(null);
-    setDragPreview(null);
-    setGridVisibleSectionId(null);
   };
 
   // 그리드 가시성 토글 헬퍼
@@ -218,7 +121,6 @@ export default function Home() {
 
     return cleanup;
   }, [resizingSectionId, triggerResize, updateSectionHeight]);
-
 
   // 셀 너비와 높이 계산 (비율 1.6:1 유지)
   useEffect(() => {
