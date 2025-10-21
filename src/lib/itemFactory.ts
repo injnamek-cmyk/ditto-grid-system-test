@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
-import { Item } from "@/types/item";
-import { ITEM_CONFIG, AddableItemType } from "@/constants/itemConfig";
+import { Item, AddableItemType } from "@/types/item";
+import { ITEM_CONFIG } from "@/constants/itemConfig";
 
 /**
  * 주어진 타입과 위치로 새로운 아이템을 생성합니다.

@@ -8,7 +8,8 @@ import { Item, ShapeItem } from "@/types/item";
 import Header from "@/layouts/Header";
 import LeftNavigationBar from "@/layouts/LeftNavigationBar";
 import { createItem } from "@/lib/itemFactory";
-import { ITEM_GRID_SIZE, AddableItemType } from "@/constants/itemConfig";
+import { ITEM_GRID_SIZE } from "@/constants/itemConfig";
+import { AddableItemType } from "@/types/item"; // LNB에서 추가 가능한 아이템 타입
 
 type Section = {
   id: string;

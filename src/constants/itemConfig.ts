@@ -1,7 +1,4 @@
-/**
- * LNB에서 추가 가능한 아이템 타입
- */
-export type AddableItemType = "box" | "button" | "text";
+import { AddableItemType } from "@/types/item";
 
 /**
  * 아이템 타입별 기본 설정
