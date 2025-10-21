@@ -70,6 +70,15 @@ export default function Home() {
   // 드래그 중인 아이템 상태 관리
   const [draggedItemType, setDraggedItemType] = useState<string | null>(null);
 
+  // 드래그 미리보기 상태 (canvas 내에서만 표시)
+  const [dragPreview, setDragPreview] = useState<{
+    sectionId: string;
+    gridX: number;
+    gridY: number;
+    cellWidth: number; // 셀 단위 너비
+    cellHeight: number; // 셀 단위 높이
+  } | null>(null);
+
   // 섹션 추가 함수
   const addSection = () => {
     const newSection: Section = {
@@ -145,6 +154,20 @@ export default function Home() {
     );
   };
 
+  // 아이템 타입별 그리드 셀 크기
+  const getItemGridSize = (itemType: string) => {
+    switch (itemType) {
+      case "box":
+        return { cellWidth: 2, cellHeight: 2 }; // 2x2 그리드
+      case "button":
+        return { cellWidth: 3, cellHeight: 2 }; // 3x2 그리드
+      case "text":
+        return { cellWidth: 2, cellHeight: 1 }; // 2x1 그리드
+      default:
+        return { cellWidth: 2, cellHeight: 2 };
+    }
+  };
+
   // LNB 드래그 시작 핸들러
   const handleLNBDragStart = (
     e: React.DragEvent<HTMLButtonElement>,
@@ -152,48 +175,8 @@ export default function Home() {
   ) => {
     setDraggedItemType(itemType);
 
-    // 드래그 이미지 생성 (초기 스타일 기반)
-    const dragImage = document.createElement("div");
-    dragImage.style.position = "absolute";
-    dragImage.style.left = "-9999px";
-    dragImage.style.width = "100px";
-    dragImage.style.height = "60px";
-    dragImage.style.borderRadius = "6px";
-    dragImage.style.boxShadow = "0 10px 15px rgba(0,0,0,0.3)";
-    dragImage.style.zIndex = "9999";
-
-    if (itemType === "box") {
-      dragImage.style.backgroundColor = "white";
-      dragImage.style.border = "1px solid rgb(209, 213, 219)";
-    } else if (itemType === "button") {
-      dragImage.style.backgroundColor = "rgb(249, 115, 22)";
-      dragImage.style.border = "2px solid rgb(217, 119, 6)";
-      dragImage.style.color = "white";
-      dragImage.style.fontSize = "12px";
-      dragImage.style.fontWeight = "600";
-      dragImage.style.display = "flex";
-      dragImage.style.alignItems = "center";
-      dragImage.style.justifyContent = "center";
-      dragImage.textContent = "BTN";
-    } else if (itemType === "text") {
-      dragImage.style.backgroundColor = "rgb(55, 65, 81)";
-      dragImage.style.border = "2px solid rgb(31, 41, 55)";
-      dragImage.style.color = "white";
-      dragImage.style.fontSize = "12px";
-      dragImage.style.fontWeight = "600";
-      dragImage.style.display = "flex";
-      dragImage.style.alignItems = "center";
-      dragImage.style.justifyContent = "center";
-      dragImage.textContent = "T";
-    }
-
-    document.body.appendChild(dragImage);
-    e.dataTransfer.setDragImage(dragImage, 50, 30);
-
-    // 정리
-    setTimeout(() => {
-      document.body.removeChild(dragImage);
-    }, 0);
+    // dataTransfer 설정 (LNB 버튼 그 자체가 드래그 이미지)
+    e.dataTransfer.effectAllowed = "copy";
   };
 
   // 섹션 내 마우스 좌표를 그리드 셀 좌표(x, y)로 변환
@@ -232,9 +215,49 @@ export default function Home() {
   };
 
   // 섹션 드래그 오버 핸들러
-  const handleSectionDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleSectionDragOver = (
+    e: React.DragEvent<HTMLDivElement>,
+    sectionId: string,
+    sectionHeight: number
+  ) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "copy";
+
+    if (!draggedItemType) return;
+
+    // 드래그 중 그리드 가시성 활성화
+    setGridVisibleSectionId(sectionId);
+
+    // 마우스 좌표를 그리드 좌표로 변환
+    const sectionElement = e.currentTarget;
+    const coordinates = getGridCoordinatesFromEvent(
+      e,
+      sectionElement,
+      sectionHeight
+    );
+
+    if (!coordinates) return;
+
+    // 아이템의 그리드 크기 가져오기
+    const { cellWidth, cellHeight } = getItemGridSize(draggedItemType);
+
+    // 미리보기 상태 업데이트
+    setDragPreview({
+      sectionId,
+      gridX: coordinates.x,
+      gridY: coordinates.y,
+      cellWidth,
+      cellHeight,
+    });
+  };
+
+  // 섹션 드래그 리브 핸들러
+  const handleSectionDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    // 자식 요소로 나간 것이 아닌 경우에만 초기화
+    if (e.currentTarget === e.target) {
+      setDragPreview(null);
+      setGridVisibleSectionId(null);
+    }
   };
 
   // 섹션 드롭 핸들러
@@ -288,6 +311,8 @@ export default function Home() {
 
     // 드래그 상태 초기화
     setDraggedItemType(null);
+    setDragPreview(null);
+    setGridVisibleSectionId(null);
   };
 
   // 그리드 가시성 토글 헬퍼
@@ -526,7 +551,8 @@ export default function Home() {
                 className="w-full py-2 relative cursor-pointer transition-all group"
                 style={{ backgroundColor: section.backgroundColor }}
                 onClick={() => setSelectedSectionId(section.id)}
-                onDragOver={handleSectionDragOver}
+                onDragOver={(e) => handleSectionDragOver(e, section.id, section.height)}
+                onDragLeave={handleSectionDragLeave}
                 onDrop={(e) => handleSectionDrop(e, section.id, section)}
               >
                 {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
@@ -788,6 +814,20 @@ export default function Home() {
                               </Rnd>
                             );
                           })}
+
+                      {/* 드래그 미리보기 박스 */}
+                      {dragPreview && dragPreview.sectionId === section.id && (
+                        <div
+                          className="absolute border-2 border-dashed border-blue-400 pointer-events-none"
+                          style={{
+                            left: `${dragPreview.gridX * (cellWidth + GAP)}px`,
+                            top: `${dragPreview.gridY * (cellHeight + GAP)}px`,
+                            width: `${dragPreview.cellWidth * cellWidth + (dragPreview.cellWidth - 1) * GAP}px`,
+                            height: `${dragPreview.cellHeight * cellHeight + (dragPreview.cellHeight - 1) * GAP}px`,
+                            backgroundColor: "rgba(59, 130, 246, 0.05)",
+                          }}
+                        />
+                      )}
                     </div>
 
                     {/* 섹션 리사이즈 핸들 */}
