@@ -1,4 +1,5 @@
 import { Rnd } from "react-rnd";
+import { useState } from "react";
 import { Item } from "@/types/item";
 import { GAP } from "@/constants/grid";
 import { useGridStore } from "@/store/useGridStore";
@@ -23,6 +24,11 @@ interface ItemRendererProps {
     newWidth: number,
     newHeight: number
   ) => void;
+  onItemContentUpdate?: (
+    sectionId: string,
+    itemId: string,
+    content: string
+  ) => void;
 }
 
 export default function ItemRenderer({
@@ -32,6 +38,7 @@ export default function ItemRenderer({
   onToggleGridVisibility,
   onItemDragStop,
   onItemResizeStop,
+  onItemContentUpdate,
 }: ItemRendererProps) {
   // Zustand 스토어에서 grid 정보 가져오기 (각 상태를 개별적으로 구독)
   const cellWidth = useGridStore((state) => state.cellWidth);
@@ -41,6 +48,11 @@ export default function ItemRenderer({
   // 아이템 선택 상태
   const selectedItemId = useSectionStore((state) => state.selectedItemId);
   const setSelectedItemId = useSectionStore((state) => state.setSelectedItemId);
+
+  // 텍스트 편집 상태
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState<string>("");
+
   // 섹션 내 아이템들 (도형 제외)
   const nonShapeItems = items.filter(
     (item) =>
@@ -122,10 +134,7 @@ export default function ItemRenderer({
                 <div
                   className="absolute border-1 border-dashed border-blue-500 rounded-md pointer-events-none transition-all"
                   style={{
-                    left: "-6px",
-                    top: "-6px",
-                    right: "-6px",
-                    bottom: "-6px",
+                    inset: "-6px",
                     boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.3)",
                   }}
                 />
@@ -135,9 +144,35 @@ export default function ItemRenderer({
                   Button
                 </button>
               ) : item.type === "text" ? (
-                <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-700 text-sm font-normal shadow-md hover:shadow-lg transition-shadow border border-gray-200 px-2">
-                  텍스트 입력
-                </div>
+                editingItemId === item.id ? (
+                  <input
+                    autoFocus
+                    type="text"
+                    value={editingText}
+                    onChange={(e) => setEditingText(e.target.value)}
+                    onBlur={() => {
+                      onItemContentUpdate?.(sectionId, item.id, editingText);
+                      setEditingItemId(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        onItemContentUpdate?.(sectionId, item.id, editingText);
+                        setEditingItemId(null);
+                      }
+                    }}
+                    className="flex items-center text-center w-full h-full bg-transparent text-gray-700 text-sm font-normal focus:outline-none"
+                  />
+                ) : (
+                  <div
+                    onClick={() => {
+                      setEditingItemId(item.id);
+                      setEditingText(item.content || "");
+                    }}
+                    className="flex justify-center items-center text-center cursor-text text-gray-700 text-sm font-normal h-full"
+                  >
+                    {item.content || "클릭해서 입력"}
+                  </div>
+                )
               ) : (
                 <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
               )}

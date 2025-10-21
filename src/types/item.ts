@@ -16,6 +16,7 @@ export type Item = {
   id: string;
   type?: ItemType;
   color?: string;
+  content?: string; // 텍스트 아이템의 내용
   desktop: { x: number; y: number; width: number; height: number };
   mobile: { x: number; y: number; width: number; height: number };
   children?: [];

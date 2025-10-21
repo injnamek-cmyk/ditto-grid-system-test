@@ -37,6 +37,7 @@ interface SectionProps {
     newWidth: number,
     newHeight: number
   ) => void;
+  onItemContentUpdate?: (sectionId: string, itemId: string, content: string) => void;
   onSectionResizeStart: (sectionId: string, height: number, e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
@@ -57,6 +58,7 @@ export default function Section({
   onToggleGridVisibility,
   onItemDragStop,
   onItemResizeStop,
+  onItemContentUpdate,
   onSectionResizeStart,
 }: SectionProps) {
   // Zustand 스토어에서 grid 정보 가져오기 (각 상태를 개별적으로 구독)
@@ -174,6 +176,7 @@ export default function Section({
                 onToggleGridVisibility={onToggleGridVisibility}
                 onItemDragStop={onItemDragStop}
                 onItemResizeStop={onItemResizeStop}
+                onItemContentUpdate={onItemContentUpdate}
               />
             )}
 

@@ -52,6 +52,7 @@ interface UsePageStateReturn {
     y: number
   ) => void;
   updateSectionHeight: (sectionId: string, newHeight: number) => void;
+  updateItemContent: (sectionId: string, itemId: string, content: string) => void;
   savePage: () => void;
 }
 
@@ -282,6 +283,26 @@ export const usePageState = (): UsePageStateReturn => {
     );
   }, []);
 
+  // 아이템 콘텐츠(텍스트) 업데이트
+  const updateItemContent = useCallback(
+    (sectionId: string, itemId: string, content: string) => {
+      setSections((prev) =>
+        prev.map((section) => {
+          if (section.id !== sectionId) return section;
+
+          return {
+            ...section,
+            items: section.items.map((i) => {
+              if (i.id !== itemId) return i;
+              return { ...i, content };
+            }),
+          };
+        })
+      );
+    },
+    []
+  );
+
   // 페이지 저장
   const savePage = useCallback(() => {
     const page: Page = {
@@ -306,6 +327,7 @@ export const usePageState = (): UsePageStateReturn => {
     updateItemSize,
     addItemAtPosition,
     updateSectionHeight,
+    updateItemContent,
     savePage,
   };
 };

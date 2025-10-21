@@ -32,6 +32,7 @@ export default function Home() {
     updateItemSize,
     addItemAtPosition,
     updateSectionHeight,
+    updateItemContent,
     savePage,
   } = usePageState();
 
@@ -212,6 +213,7 @@ export default function Home() {
           onToggleGridVisibility={toggleGridVisibility}
           onItemDragStop={handleItemDragStop}
           onItemResizeStop={handleItemResizeStop}
+          onItemContentUpdate={updateItemContent}
           onSectionResizeStart={handleResizeStart}
         />
 

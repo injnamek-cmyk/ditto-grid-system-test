@@ -29,6 +29,7 @@ interface CanvasProps {
     newWidth: number,
     newHeight: number
   ) => void;
+  onItemContentUpdate?: (sectionId: string, itemId: string, content: string) => void;
   onSectionResizeStart: (sectionId: string, height: number, e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
@@ -46,6 +47,7 @@ export default function Canvas({
   onToggleGridVisibility,
   onItemDragStop,
   onItemResizeStop,
+  onItemContentUpdate,
   onSectionResizeStart,
 }: CanvasProps) {
   // Zustand 스토어에서 선택된 섹션 가져오기 (각 상태를 개별적으로 구독)
@@ -72,6 +74,7 @@ export default function Canvas({
           onToggleGridVisibility={onToggleGridVisibility}
           onItemDragStop={onItemDragStop}
           onItemResizeStop={onItemResizeStop}
+          onItemContentUpdate={onItemContentUpdate}
           onSectionResizeStart={onSectionResizeStart}
         />
       ))}
