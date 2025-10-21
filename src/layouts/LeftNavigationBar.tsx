@@ -6,7 +6,10 @@ interface LeftNavigationBarProps {
   onAddBox: () => void;
   onAddButton: () => void;
   onAddText: () => void;
-  onDragStart?: (e: React.DragEvent<HTMLButtonElement>, itemType: string) => void;
+  onDragStart?: (
+    e: React.DragEvent<HTMLButtonElement>,
+    itemType: string
+  ) => void;
 }
 
 export default function LeftNavigationBar({
@@ -17,7 +20,7 @@ export default function LeftNavigationBar({
 }: LeftNavigationBarProps) {
   return (
     <div className="w-[200px] p-4 bg-white border-r border-gray-200">
-      <section className="grid grid-cols2 gap-2 sticky top-4">
+      <section className="grid grid-cols2 gap-2 sticky top-[84px]">
         <button
           onClick={onAddBox}
           draggable

@@ -6,7 +6,7 @@ interface HeaderProps {
 
 export default function Header({ savePage }: HeaderProps) {
   return (
-    <header className="flex items-center border-b border-gray-200 h-[70px] px-5">
+    <header className="flex items-center border-b border-gray-200 h-[70px] px-5 sticky top-0 z-10 bg-white">
       <section className="flex gap-2">
         <Image src="/ditto.svg" width={40} height={40} alt="ditto_logo" />
         <Image src="/ditto_text.svg" width={70} height={40} alt="ditto_logo" />

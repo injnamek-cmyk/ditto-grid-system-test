@@ -2,72 +2,31 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Rnd } from "react-rnd";
-import { v4 as uuidv4 } from "uuid";
 import PixiCanvas from "@/components/PixiCanvas";
-import { Item, ShapeItem } from "@/types/item";
+import { ShapeItem } from "@/types/item";
 import Header from "@/layouts/Header";
 import LeftNavigationBar from "@/layouts/LeftNavigationBar";
-import { createItem } from "@/lib/itemFactory";
 import { ITEM_GRID_SIZE } from "@/constants/itemConfig";
-import { AddableItemType } from "@/types/item"; // LNB에서 추가 가능한 아이템 타입
-
-type Section = {
-  id: string;
-  height: number; // 행 개수
-  backgroundColor: string; // 배경색
-  items: Item[]; // 이 섹션에 속한 아이템들
-};
-
-type Page = {
-  id: string;
-  sections: Section[];
-  createdAt: string;
-  updatedAt: string;
-};
+import { AddableItemType } from "@/types/item";
+import { CELL_ASPECT_RATIO, GAP } from "@/constants/grid";
+import { usePageState } from "@/hooks/usePageState";
+import { useSectionResize } from "@/hooks/useSectionResize";
+import { getGridCoordinatesFromEvent } from "@/lib/gridCalculations";
 
 export default function Home() {
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // 셀 비율 및 간격
-  const CELL_ASPECT_RATIO = 1.6; // 가로:세로 = 1.6:1
-  const GAP = 8;
-
   const [cellWidth, setCellWidth] = useState(0);
   const [cellHeight, setCellHeight] = useState(0);
-
-  // 초기 ID 생성
-  const initialSectionId = useRef(uuidv4());
-
-  // 섹션 관리 (items도 포함)
-  const [sections, setSections] = useState<Section[]>([
-    {
-      id: initialSectionId.current,
-      height: 24,
-      backgroundColor: "#ffffff",
-      items: [],
-    },
-  ]);
 
   // 반응형 그리드 컬럼 수 설정
   const [gridCols, setGridCols] = useState(24);
   const [isMobile, setIsMobile] = useState(false);
 
-  // 선택된 섹션 관리
-  const [selectedSectionId, setSelectedSectionId] = useState<string>(
-    initialSectionId.current
-  );
-
   // 그리드 가시성 관리 (드래그/리사이즈 중인 섹션)
   const [gridVisibleSectionId, setGridVisibleSectionId] = useState<
     string | null
   >(null);
-
-  // 섹션 리사이즈 상태
-  const [resizingSectionId, setResizingSectionId] = useState<string | null>(
-    null
-  );
-  const [resizeStartY, setResizeStartY] = useState(0);
-  const [resizeStartHeight, setResizeStartHeight] = useState(0);
 
   // 드래그 중인 아이템 상태 관리
   const [draggedItemType, setDraggedItemType] = useState<string | null>(null);
@@ -81,52 +40,39 @@ export default function Home() {
     cellHeight: number; // 셀 단위 높이
   } | null>(null);
 
-  // 섹션 추가 함수
-  const addSection = () => {
-    const newSection: Section = {
-      id: uuidv4(),
-      height: 24,
-      backgroundColor: "#ffffff",
-      items: [],
-    };
-    setSections([...sections, newSection]);
+  // 페이지 상태 관리
+  const {
+    sections,
+    selectedSectionId,
+    setSelectedSectionId,
+    addSection,
+    changeSectionBackgroundColor,
+    updateItemPosition,
+    updateItemSize,
+    addItemAtPosition,
+    updateSectionHeight,
+    savePage,
+  } = usePageState();
+
+  // 섹션 리사이즈 훅
+  const {
+    resizingSectionId,
+    handleResizeStart,
+    updateSectionHeight: triggerResize,
+  } = useSectionResize(cellHeight);
+
+  // LNB에서 아이템 추가 헬퍼 함수
+  const addBox = () => {
+    addItemAtPosition(selectedSectionId, "box", 0, 0);
   };
 
-  // 아이템 추가 헬퍼 함수 (선택된 섹션에 추가)
-  const addItemToSelectedSection = (type: AddableItemType) => {
-    const newItem = createItem(type);
-    setSections((prevSections) =>
-      prevSections.map((s) =>
-        s.id === selectedSectionId ? { ...s, items: [...s.items, newItem] } : s
-      )
-    );
+  const addButton = () => {
+    addItemAtPosition(selectedSectionId, "button", 0, 0);
   };
 
-  // 박스 추가 함수
-  const addBox = () => addItemToSelectedSection("box");
-
-  // 버튼 추가 함수
-  const addButton = () => addItemToSelectedSection("button");
-
-  // 텍스트 추가 함수
-  const addText = () => addItemToSelectedSection("text");
-
-  // 도형 추가 함수
-  // const addShape = (shapeType: "circle" | "triangle" | "rectangle") => {
-  //   const newShape: Item = {
-  //     id: uuidv4(),
-  //     type: shapeType,
-  //     color: "#3b82f6", // 파란색 기본값
-  //     desktop: { x: 0, y: 0, width: 3, height: 3 },
-  //     mobile: { x: 0, y: 0, width: 3, height: 3 },
-  //   };
-  //   setSections((prevSections) =>
-  //     prevSections.map((s) =>
-  //       s.id === selectedSectionId ? { ...s, items: [...s.items, newShape] } : s
-  //     )
-  //   );
-  // };
-
+  const addText = () => {
+    addItemAtPosition(selectedSectionId, "text", 0, 0);
+  };
 
   // LNB 드래그 시작 핸들러
   const handleLNBDragStart = (
@@ -139,40 +85,6 @@ export default function Home() {
     e.dataTransfer.effectAllowed = "copy";
   };
 
-  // 섹션 내 마우스 좌표를 그리드 셀 좌표(x, y)로 변환
-  const getGridCoordinatesFromEvent = (
-    e: React.DragEvent<HTMLDivElement>,
-    sectionElement: HTMLElement,
-    sectionHeight: number
-  ): { x: number; y: number } | null => {
-    if (cellWidth <= 0 || cellHeight <= 0) return null;
-
-    // 섹션 내 그리드 컨테이너 찾기
-    const gridContainer = sectionElement.querySelector(
-      ".w-full.grid.grid-cols-12"
-    ) as HTMLElement;
-    if (!gridContainer) return null;
-
-    // 그리드 컨테이너의 위치와 크기
-    const gridRect = gridContainer.getBoundingClientRect();
-
-    // 마우스 위치를 그리드 컨테이너 내 상대 좌표로 변환
-    const relativeX = e.clientX - gridRect.left;
-    const relativeY = e.clientY - gridRect.top;
-
-    // 그리드 셀 좌표 계산
-    const cellWithGap = cellWidth + GAP;
-    const rowWithGap = cellHeight + GAP;
-
-    let gridX = Math.floor(relativeX / cellWithGap);
-    let gridY = Math.floor(relativeY / rowWithGap);
-
-    // 바운더리 체크
-    gridX = Math.max(0, Math.min(gridCols - 1, gridX));
-    gridY = Math.max(0, Math.min(sectionHeight - 1, gridY));
-
-    return { x: gridX, y: gridY };
-  };
 
   // 섹션 드래그 오버 핸들러
   const handleSectionDragOver = (
@@ -193,21 +105,25 @@ export default function Home() {
     const coordinates = getGridCoordinatesFromEvent(
       e,
       sectionElement,
+      cellWidth,
+      cellHeight,
+      gridCols,
       sectionHeight
     );
 
     if (!coordinates) return;
 
     // 아이템의 그리드 크기 가져오기
-    const { cellWidth, cellHeight } = ITEM_GRID_SIZE[draggedItemType as AddableItemType];
+    const itemSize =
+      ITEM_GRID_SIZE[draggedItemType as AddableItemType];
 
     // 미리보기 상태 업데이트
     setDragPreview({
       sectionId,
       gridX: coordinates.x,
       gridY: coordinates.y,
-      cellWidth,
-      cellHeight,
+      cellWidth: itemSize.cellWidth,
+      cellHeight: itemSize.cellHeight,
     });
   };
 
@@ -223,8 +139,7 @@ export default function Home() {
   // 섹션 드롭 핸들러
   const handleSectionDrop = (
     e: React.DragEvent<HTMLDivElement>,
-    sectionId: string,
-    section: Section
+    sectionId: string
   ) => {
     e.preventDefault();
 
@@ -232,41 +147,26 @@ export default function Home() {
 
     // 마우스 좌표를 그리드 좌표로 변환
     const sectionElement = e.currentTarget;
+    const section = sections.find((s) => s.id === sectionId);
+    if (!section) return;
+
     const coordinates = getGridCoordinatesFromEvent(
       e,
       sectionElement,
+      cellWidth,
+      cellHeight,
+      gridCols,
       section.height
     );
 
     if (!coordinates) return;
 
-    // 드롭한 위치에서 시작하는 새 아이템 생성
-    const newItem: Item = {
-      id: uuidv4(),
-      type: draggedItemType as "box" | "button" | "text",
-      desktop:
-        draggedItemType === "button"
-          ? { x: coordinates.x, y: coordinates.y, width: 3, height: 2 }
-          : draggedItemType === "text"
-          ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
-          : { x: coordinates.x, y: coordinates.y, width: 2, height: 2 },
-      mobile:
-        draggedItemType === "button"
-          ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
-          : draggedItemType === "text"
-          ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
-          : { x: coordinates.x, y: coordinates.y, width: 2, height: 2 },
-    };
-
-    if (draggedItemType === "box") {
-      newItem.children = [];
-    }
-
-    // 섹션에 아이템 추가
-    setSections((prevSections) =>
-      prevSections.map((s) =>
-        s.id === sectionId ? { ...s, items: [...s.items, newItem] } : s
-      )
+    // 드롭한 위치에 아이템 추가
+    addItemAtPosition(
+      sectionId,
+      draggedItemType as AddableItemType,
+      coordinates.x,
+      coordinates.y
     );
 
     // 드래그 상태 초기화
@@ -278,52 +178,6 @@ export default function Home() {
   // 그리드 가시성 토글 헬퍼
   const toggleGridVisibility = (sectionId: string, visible: boolean) => {
     setGridVisibleSectionId(visible ? sectionId : null);
-  };
-
-  // 섹션 배경색 변경 함수
-  const changeSectionBackgroundColor = (sectionId: string, color: string) => {
-    setSections((prevSections) =>
-      prevSections.map((s) =>
-        s.id === sectionId ? { ...s, backgroundColor: color } : s
-      )
-    );
-  };
-
-  // 아이템 위치 업데이트 헬퍼
-  const updateItemPosition = (
-    sectionId: string,
-    itemId: string,
-    newX: number,
-    newY: number,
-    sectionHeight: number
-  ) => {
-    setSections((prevSections) =>
-      prevSections.map((section) => {
-        if (section.id !== sectionId) return section;
-
-        return {
-          ...section,
-          items: section.items.map((i) => {
-            if (i.id !== itemId) return i;
-
-            const clampedX = Math.max(0, Math.min(gridCols - 1, newX));
-            const clampedY = Math.max(0, Math.min(sectionHeight - 1, newY));
-
-            if (isMobile) {
-              return {
-                ...i,
-                mobile: { ...i.mobile, x: clampedX, y: clampedY },
-              };
-            } else {
-              return {
-                ...i,
-                desktop: { ...i.desktop, x: clampedX, y: clampedY },
-              };
-            }
-          }),
-        };
-      })
-    );
   };
 
   // 도형 드래그 시작 핸들러
@@ -342,80 +196,29 @@ export default function Home() {
 
     const section = sections.find((s) => s.id === sectionId);
     if (section) {
-      updateItemPosition(sectionId, itemId, newX, newY, section.height);
+      updateItemPosition(
+        sectionId,
+        itemId,
+        newX,
+        newY,
+        section.height,
+        isMobile,
+        gridCols
+      );
     }
   };
 
-  // 페이지 저장 함수
-  const savePage = () => {
-    const page: Page = {
-      id: uuidv4(),
-      sections,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // 로컬 스토리지에 저장
-    localStorage.setItem("gridPage", JSON.stringify(page));
-    alert("페이지가 저장되었습니다!");
-  };
-
-  // 섹션 리사이즈 핸들러
-  const handleResizeStart = (
-    sectionId: string,
-    section: Section,
-    e: React.MouseEvent
-  ) => {
-    e.preventDefault();
-    setResizingSectionId(sectionId);
-    setResizeStartY(e.clientY);
-    setResizeStartHeight(section.height);
-  };
-
+  // 섹션 리사이즈 useEffect
   useEffect(() => {
     if (resizingSectionId === null) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaY = e.clientY - resizeStartY;
-      const rowHeight = cellHeight + GAP;
-      const deltaRows = Math.round(deltaY / rowHeight);
-      const newHeight = Math.max(12, resizeStartHeight + deltaRows); // 최소 12행
+    const cleanup = triggerResize((newHeight) => {
+      updateSectionHeight(resizingSectionId, newHeight);
+    });
 
-      setSections((prevSections) =>
-        prevSections.map((s) =>
-          s.id === resizingSectionId ? { ...s, height: newHeight } : s
-        )
-      );
-    };
+    return cleanup;
+  }, [resizingSectionId, triggerResize, updateSectionHeight]);
 
-    const handleMouseUp = () => {
-      setResizingSectionId(null);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [resizingSectionId, resizeStartY, resizeStartHeight, cellHeight, GAP]);
-
-  // 앱 시작 시 로컬 스토리지에서 페이지 데이터 불러오기
-  useEffect(() => {
-    const savedPage = localStorage.getItem("gridPage");
-    if (savedPage) {
-      try {
-        const page: Page = JSON.parse(savedPage);
-        setSections(page.sections);
-        if (page.sections.length > 0) {
-          setSelectedSectionId(page.sections[0].id);
-        }
-      } catch (error) {
-        console.error("페이지 데이터 불러오기 실패:", error);
-      }
-    }
-  }, []);
 
   // 셀 너비와 높이 계산 (비율 1.6:1 유지)
   useEffect(() => {
@@ -469,7 +272,7 @@ export default function Home() {
         resizeObserver.disconnect();
       }
     };
-  }, [CELL_ASPECT_RATIO]);
+  }, []);
 
   return (
     <div className="min-h-screen relative">
@@ -515,7 +318,7 @@ export default function Home() {
                   handleSectionDragOver(e, section.id, section.height)
                 }
                 onDragLeave={handleSectionDragLeave}
-                onDrop={(e) => handleSectionDrop(e, section.id, section)}
+                onDrop={(e) => handleSectionDrop(e, section.id)}
               >
                 {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
                 {!isSelected && (
@@ -671,7 +474,9 @@ export default function Home() {
                                     item.id,
                                     newCol,
                                     newRow,
-                                    section.height
+                                    section.height,
+                                    isMobile,
+                                    gridCols
                                   );
                                 }}
                                 onResizeStart={() =>
@@ -698,62 +503,16 @@ export default function Home() {
                                     position.y / (cellHeight + GAP)
                                   );
 
-                                  setSections((prevSections) =>
-                                    prevSections.map((s) => {
-                                      if (s.id !== section.id) return s;
-
-                                      return {
-                                        ...s,
-                                        items: s.items.map((i) => {
-                                          if (i.id !== item.id) return i;
-
-                                          const clampedX = Math.max(
-                                            0,
-                                            Math.min(gridCols - 1, newCol)
-                                          );
-                                          const clampedY = Math.max(
-                                            0,
-                                            Math.min(section.height - 1, newRow)
-                                          );
-                                          const clampedWidth = Math.max(
-                                            1,
-                                            Math.min(
-                                              gridCols - newCol,
-                                              newWidth
-                                            )
-                                          );
-                                          const clampedHeight = Math.max(
-                                            1,
-                                            Math.min(
-                                              section.height - newRow,
-                                              newHeight
-                                            )
-                                          );
-
-                                          if (isMobile) {
-                                            return {
-                                              ...i,
-                                              mobile: {
-                                                x: clampedX,
-                                                y: clampedY,
-                                                width: clampedWidth,
-                                                height: clampedHeight,
-                                              },
-                                            };
-                                          } else {
-                                            return {
-                                              ...i,
-                                              desktop: {
-                                                x: clampedX,
-                                                y: clampedY,
-                                                width: clampedWidth,
-                                                height: clampedHeight,
-                                              },
-                                            };
-                                          }
-                                        }),
-                                      };
-                                    })
+                                  updateItemSize(
+                                    section.id,
+                                    item.id,
+                                    newCol,
+                                    newRow,
+                                    newWidth,
+                                    newHeight,
+                                    section.height,
+                                    isMobile,
+                                    gridCols
                                   );
                                 }}
                                 dragGrid={[cellWidth + GAP, cellHeight + GAP]}
@@ -802,7 +561,7 @@ export default function Home() {
                     <div
                       className="h-px border-t border-dashed border-gray-400 hover:border-blue-500 cursor-ns-resize transition-colors mt-4"
                       onMouseDown={(e) =>
-                        handleResizeStart(section.id, section, e)
+                        handleResizeStart(section.id, section.height, e)
                       }
                     ></div>
                   </div>
