@@ -5,9 +5,10 @@ import { Rnd } from "react-rnd";
 import { v4 as uuidv4 } from "uuid";
 import PixiCanvas from "@/components/PixiCanvas";
 import { Item, ShapeItem } from "@/types/item";
-import Image from "next/image";
 import Header from "@/layouts/Header";
 import LeftNavigationBar from "@/layouts/LeftNavigationBar";
+import { createItem } from "@/lib/itemFactory";
+import { ITEM_GRID_SIZE, AddableItemType } from "@/constants/itemConfig";
 
 type Section = {
   id: string;
@@ -90,21 +91,24 @@ export default function Home() {
     setSections([...sections, newSection]);
   };
 
-  // 박스 추가 함수 (선택된 섹션에 추가)
-  const addBox = () => {
-    const newItem: Item = {
-      id: uuidv4(),
-      desktop: { x: 0, y: 0, width: 2, height: 2 },
-      mobile: { x: 0, y: 0, width: 2, height: 2 },
-      type: "box",
-      children: [],
-    };
+  // 아이템 추가 헬퍼 함수 (선택된 섹션에 추가)
+  const addItemToSelectedSection = (type: AddableItemType) => {
+    const newItem = createItem(type);
     setSections((prevSections) =>
       prevSections.map((s) =>
         s.id === selectedSectionId ? { ...s, items: [...s.items, newItem] } : s
       )
     );
   };
+
+  // 박스 추가 함수
+  const addBox = () => addItemToSelectedSection("box");
+
+  // 버튼 추가 함수
+  const addButton = () => addItemToSelectedSection("button");
+
+  // 텍스트 추가 함수
+  const addText = () => addItemToSelectedSection("text");
 
   // 도형 추가 함수
   // const addShape = (shapeType: "circle" | "triangle" | "rectangle") => {
@@ -122,51 +126,6 @@ export default function Home() {
   //   );
   // };
 
-  // 버튼 추가 함수
-  const addButton = () => {
-    const newButton: Item = {
-      id: uuidv4(),
-      type: "button",
-      desktop: { x: 0, y: 0, width: 3, height: 2 },
-      mobile: { x: 0, y: 0, width: 2, height: 1 },
-    };
-    setSections((prevSections) =>
-      prevSections.map((s) =>
-        s.id === selectedSectionId
-          ? { ...s, items: [...s.items, newButton] }
-          : s
-      )
-    );
-  };
-
-  // 텍스트 추가 함수
-  const addText = () => {
-    const newText: Item = {
-      id: uuidv4(),
-      type: "text",
-      desktop: { x: 0, y: 0, width: 2, height: 1 },
-      mobile: { x: 0, y: 0, width: 2, height: 1 },
-    };
-    setSections((prevSections) =>
-      prevSections.map((s) =>
-        s.id === selectedSectionId ? { ...s, items: [...s.items, newText] } : s
-      )
-    );
-  };
-
-  // 아이템 타입별 그리드 셀 크기
-  const getItemGridSize = (itemType: string) => {
-    switch (itemType) {
-      case "box":
-        return { cellWidth: 2, cellHeight: 2 }; // 2x2 그리드
-      case "button":
-        return { cellWidth: 3, cellHeight: 2 }; // 3x2 그리드
-      case "text":
-        return { cellWidth: 2, cellHeight: 1 }; // 2x1 그리드
-      default:
-        return { cellWidth: 2, cellHeight: 2 };
-    }
-  };
 
   // LNB 드래그 시작 핸들러
   const handleLNBDragStart = (
@@ -239,7 +198,7 @@ export default function Home() {
     if (!coordinates) return;
 
     // 아이템의 그리드 크기 가져오기
-    const { cellWidth, cellHeight } = getItemGridSize(draggedItemType);
+    const { cellWidth, cellHeight } = ITEM_GRID_SIZE[draggedItemType as AddableItemType];
 
     // 미리보기 상태 업데이트
     setDragPreview({
@@ -288,14 +247,14 @@ export default function Home() {
         draggedItemType === "button"
           ? { x: coordinates.x, y: coordinates.y, width: 3, height: 2 }
           : draggedItemType === "text"
-            ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
-            : { x: coordinates.x, y: coordinates.y, width: 2, height: 2 },
+          ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
+          : { x: coordinates.x, y: coordinates.y, width: 2, height: 2 },
       mobile:
         draggedItemType === "button"
           ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
           : draggedItemType === "text"
-            ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
-            : { x: coordinates.x, y: coordinates.y, width: 2, height: 2 },
+          ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
+          : { x: coordinates.x, y: coordinates.y, width: 2, height: 2 },
     };
 
     if (draggedItemType === "box") {
@@ -551,7 +510,9 @@ export default function Home() {
                 className="w-full py-2 relative cursor-pointer transition-all group"
                 style={{ backgroundColor: section.backgroundColor }}
                 onClick={() => setSelectedSectionId(section.id)}
-                onDragOver={(e) => handleSectionDragOver(e, section.id, section.height)}
+                onDragOver={(e) =>
+                  handleSectionDragOver(e, section.id, section.height)
+                }
                 onDragLeave={handleSectionDragLeave}
                 onDrop={(e) => handleSectionDrop(e, section.id, section)}
               >
@@ -822,8 +783,14 @@ export default function Home() {
                           style={{
                             left: `${dragPreview.gridX * (cellWidth + GAP)}px`,
                             top: `${dragPreview.gridY * (cellHeight + GAP)}px`,
-                            width: `${dragPreview.cellWidth * cellWidth + (dragPreview.cellWidth - 1) * GAP}px`,
-                            height: `${dragPreview.cellHeight * cellHeight + (dragPreview.cellHeight - 1) * GAP}px`,
+                            width: `${
+                              dragPreview.cellWidth * cellWidth +
+                              (dragPreview.cellWidth - 1) * GAP
+                            }px`,
+                            height: `${
+                              dragPreview.cellHeight * cellHeight +
+                              (dragPreview.cellHeight - 1) * GAP
+                            }px`,
                             backgroundColor: "rgba(59, 130, 246, 0.05)",
                           }}
                         />
