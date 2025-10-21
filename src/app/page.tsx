@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from "uuid";
 import PixiCanvas from "@/components/PixiCanvas";
 import { Item, ShapeItem } from "@/types/item";
 import Image from "next/image";
+import Header from "@/layouts/Header";
+import LeftNavigationBar from "@/layouts/LeftNavigationBar";
 
 type Section = {
   id: string;
@@ -65,6 +67,9 @@ export default function Home() {
   const [resizeStartY, setResizeStartY] = useState(0);
   const [resizeStartHeight, setResizeStartHeight] = useState(0);
 
+  // 드래그 중인 아이템 상태 관리
+  const [draggedItemType, setDraggedItemType] = useState<string | null>(null);
+
   // 섹션 추가 함수
   const addSection = () => {
     const newSection: Section = {
@@ -76,13 +81,14 @@ export default function Home() {
     setSections([...sections, newSection]);
   };
 
-  // 아이템 추가 함수 (선택된 섹션에 추가)
+  // 박스 추가 함수 (선택된 섹션에 추가)
   const addBox = () => {
     const newItem: Item = {
       id: uuidv4(),
       desktop: { x: 0, y: 0, width: 2, height: 2 },
       mobile: { x: 0, y: 0, width: 2, height: 2 },
       type: "box",
+      children: [],
     };
     setSections((prevSections) =>
       prevSections.map((s) =>
@@ -137,6 +143,151 @@ export default function Home() {
         s.id === selectedSectionId ? { ...s, items: [...s.items, newText] } : s
       )
     );
+  };
+
+  // LNB 드래그 시작 핸들러
+  const handleLNBDragStart = (
+    e: React.DragEvent<HTMLButtonElement>,
+    itemType: string
+  ) => {
+    setDraggedItemType(itemType);
+
+    // 드래그 이미지 생성 (초기 스타일 기반)
+    const dragImage = document.createElement("div");
+    dragImage.style.position = "absolute";
+    dragImage.style.left = "-9999px";
+    dragImage.style.width = "100px";
+    dragImage.style.height = "60px";
+    dragImage.style.borderRadius = "6px";
+    dragImage.style.boxShadow = "0 10px 15px rgba(0,0,0,0.3)";
+    dragImage.style.zIndex = "9999";
+
+    if (itemType === "box") {
+      dragImage.style.backgroundColor = "white";
+      dragImage.style.border = "1px solid rgb(209, 213, 219)";
+    } else if (itemType === "button") {
+      dragImage.style.backgroundColor = "rgb(249, 115, 22)";
+      dragImage.style.border = "2px solid rgb(217, 119, 6)";
+      dragImage.style.color = "white";
+      dragImage.style.fontSize = "12px";
+      dragImage.style.fontWeight = "600";
+      dragImage.style.display = "flex";
+      dragImage.style.alignItems = "center";
+      dragImage.style.justifyContent = "center";
+      dragImage.textContent = "BTN";
+    } else if (itemType === "text") {
+      dragImage.style.backgroundColor = "rgb(55, 65, 81)";
+      dragImage.style.border = "2px solid rgb(31, 41, 55)";
+      dragImage.style.color = "white";
+      dragImage.style.fontSize = "12px";
+      dragImage.style.fontWeight = "600";
+      dragImage.style.display = "flex";
+      dragImage.style.alignItems = "center";
+      dragImage.style.justifyContent = "center";
+      dragImage.textContent = "T";
+    }
+
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 50, 30);
+
+    // 정리
+    setTimeout(() => {
+      document.body.removeChild(dragImage);
+    }, 0);
+  };
+
+  // 섹션 내 마우스 좌표를 그리드 셀 좌표(x, y)로 변환
+  const getGridCoordinatesFromEvent = (
+    e: React.DragEvent<HTMLDivElement>,
+    sectionElement: HTMLElement,
+    sectionHeight: number
+  ): { x: number; y: number } | null => {
+    if (cellWidth <= 0 || cellHeight <= 0) return null;
+
+    // 섹션 내 그리드 컨테이너 찾기
+    const gridContainer = sectionElement.querySelector(
+      ".w-full.grid.grid-cols-12"
+    ) as HTMLElement;
+    if (!gridContainer) return null;
+
+    // 그리드 컨테이너의 위치와 크기
+    const gridRect = gridContainer.getBoundingClientRect();
+
+    // 마우스 위치를 그리드 컨테이너 내 상대 좌표로 변환
+    const relativeX = e.clientX - gridRect.left;
+    const relativeY = e.clientY - gridRect.top;
+
+    // 그리드 셀 좌표 계산
+    const cellWithGap = cellWidth + GAP;
+    const rowWithGap = cellHeight + GAP;
+
+    let gridX = Math.floor(relativeX / cellWithGap);
+    let gridY = Math.floor(relativeY / rowWithGap);
+
+    // 바운더리 체크
+    gridX = Math.max(0, Math.min(gridCols - 1, gridX));
+    gridY = Math.max(0, Math.min(sectionHeight - 1, gridY));
+
+    return { x: gridX, y: gridY };
+  };
+
+  // 섹션 드래그 오버 핸들러
+  const handleSectionDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  };
+
+  // 섹션 드롭 핸들러
+  const handleSectionDrop = (
+    e: React.DragEvent<HTMLDivElement>,
+    sectionId: string,
+    section: Section
+  ) => {
+    e.preventDefault();
+
+    if (!draggedItemType) return;
+
+    // 마우스 좌표를 그리드 좌표로 변환
+    const sectionElement = e.currentTarget;
+    const coordinates = getGridCoordinatesFromEvent(
+      e,
+      sectionElement,
+      section.height
+    );
+
+    if (!coordinates) return;
+
+    // 드롭한 위치에서 시작하는 새 아이템 생성
+    const newItem: Item = {
+      id: uuidv4(),
+      type: draggedItemType as "box" | "button" | "text",
+      desktop:
+        draggedItemType === "button"
+          ? { x: coordinates.x, y: coordinates.y, width: 3, height: 2 }
+          : draggedItemType === "text"
+            ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
+            : { x: coordinates.x, y: coordinates.y, width: 2, height: 2 },
+      mobile:
+        draggedItemType === "button"
+          ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
+          : draggedItemType === "text"
+            ? { x: coordinates.x, y: coordinates.y, width: 2, height: 1 }
+            : { x: coordinates.x, y: coordinates.y, width: 2, height: 2 },
+    };
+
+    if (draggedItemType === "box") {
+      newItem.children = [];
+    }
+
+    // 섹션에 아이템 추가
+    setSections((prevSections) =>
+      prevSections.map((s) =>
+        s.id === sectionId ? { ...s, items: [...s.items, newItem] } : s
+      )
+    );
+
+    // 드래그 상태 초기화
+    setDraggedItemType(null);
   };
 
   // 그리드 가시성 토글 헬퍼
@@ -337,65 +488,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative">
-      <header className="flex items-center border-b border-gray-200 h-[70px] px-5">
-        <section className="flex gap-2">
-          <Image src="/ditto.svg" width={40} height={40} alt="ditto_logo" />
-          <Image
-            src="/ditto_text.svg"
-            width={70}
-            height={40}
-            alt="ditto_logo"
-          />
-        </section>
-        <div className="ml-auto">
-          <button
-            onClick={savePage}
-            className="w-12 h-12 bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200"
-            title="페이지 저장"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-              />
-            </svg>
-          </button>
-        </div>
-      </header>
-      <main className="flex">
+      <Header savePage={savePage} />
+      <main className="flex pb-10">
         {/* LNB */}
-        <div className="w-[200px] p-4 bg-white border-r border-gray-200">
-          <section className="grid grid-cols2 gap-2">
-            <button
-              onClick={addBox}
-              className="bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center text-2xl font-light border border-gray-200"
-              title="박스 추가"
-            >
-              +
-            </button>
-            <button
-              onClick={addButton}
-              className="bg-orange-500 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-orange-600 transition-all flex items-center justify-center border-2 border-orange-600 text-xs font-semibold"
-              title="버튼 추가"
-            >
-              BTN
-            </button>
-            <button
-              onClick={addText}
-              className="bg-gray-700 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-gray-800 transition-all flex items-center justify-center border-2 border-gray-800 text-xs font-semibold"
-              title="텍스트 추가"
-            >
-              T
-            </button>
-          </section>
-        </div>
+        <LeftNavigationBar
+          onAddBox={addBox}
+          onAddButton={addButton}
+          onAddText={addText}
+          onDragStart={handleLNBDragStart}
+        />
 
         {/* Canvas */}
         <div className="w-full">
@@ -425,6 +526,8 @@ export default function Home() {
                 className="w-full py-2 relative cursor-pointer transition-all group"
                 style={{ backgroundColor: section.backgroundColor }}
                 onClick={() => setSelectedSectionId(section.id)}
+                onDragOver={handleSectionDragOver}
+                onDrop={(e) => handleSectionDrop(e, section.id, section)}
               >
                 {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
                 {!isSelected && (

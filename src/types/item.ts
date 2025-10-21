@@ -12,6 +12,7 @@ export type Item = {
   color?: string;
   desktop: { x: number; y: number; width: number; height: number };
   mobile: { x: number; y: number; width: number; height: number };
+  children?: [];
 };
 
 export type ShapeType = "circle" | "triangle" | "rectangle";
