@@ -398,296 +398,308 @@ export default function Home() {
         </div>
 
         {/* Canvas */}
-        {sections.map((section, sectionIndex) => {
-          // 각 섹션별 그리드 셀 생성
-          const sectionGridCells = Array.from(
-            { length: gridCols * section.height },
-            (_, index) => {
-              const row = Math.floor(index / gridCols);
-              const col = index % gridCols;
-              return {
-                row,
-                col,
-                id: `section-${section.id}-cell-${row}-${col}`,
-              };
-            }
-          );
+        <div className="w-full">
+          {sections.map((section, sectionIndex) => {
+            // 각 섹션별 그리드 셀 생성
+            const sectionGridCells = Array.from(
+              { length: gridCols * section.height },
+              (_, index) => {
+                const row = Math.floor(index / gridCols);
+                const col = index % gridCols;
+                return {
+                  row,
+                  col,
+                  id: `section-${section.id}-cell-${row}-${col}`,
+                };
+              }
+            );
 
-          // 이 섹션에 속한 아이템들 (section.items 직접 사용)
-          const sectionItems = section.items;
+            // 이 섹션에 속한 아이템들 (section.items 직접 사용)
+            const sectionItems = section.items;
 
-          const isSelected = section.id === selectedSectionId;
+            const isSelected = section.id === selectedSectionId;
 
-          return (
-            <div
-              key={section.id}
-              className={`w-full py-2 relative cursor-pointer transition-all group`}
-              style={{ backgroundColor: section.backgroundColor }}
-              onClick={() => setSelectedSectionId(section.id)}
-            >
-              {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
-              {!isSelected && (
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                  <button
-                    className="px-6 py-3 bg-white text-black rounded-lg shadow-lg pointer-events-auto font-medium"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedSectionId(section.id);
-                    }}
-                  >
-                    섹션 선택하기
-                  </button>
-                </div>
-              )}
-
-              {/* 호버 시 어두운 배경 (선택되지 않은 섹션) */}
-              {!isSelected && (
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 pointer-events-none"></div>
-              )}
-
-              <div className="max-w-[1920px] mx-auto px-4">
-                {/* 선택된 섹션에 컬러 피커 표시 */}
-                {isSelected && (
-                  <div className="mb-4 flex items-center gap-2 bg-white p-3 rounded-lg shadow-md border border-gray-200">
-                    <label className="text-sm font-medium text-gray-700">
-                      배경색:
-                    </label>
-                    <input
-                      type="color"
-                      value={section.backgroundColor}
-                      onChange={(e) =>
-                        changeSectionBackgroundColor(section.id, e.target.value)
-                      }
-                      className="w-12 h-8 rounded cursor-pointer border border-gray-300"
-                    />
-                    <input
-                      type="text"
-                      value={section.backgroundColor}
-                      onChange={(e) =>
-                        changeSectionBackgroundColor(section.id, e.target.value)
-                      }
-                      className="px-2 py-1 text-sm border border-gray-300 rounded w-24"
-                      placeholder="#ffffff"
-                    />
+            return (
+              <div
+                key={section.id}
+                className="w-full py-2 relative cursor-pointer transition-all group"
+                style={{ backgroundColor: section.backgroundColor }}
+                onClick={() => setSelectedSectionId(section.id)}
+              >
+                {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
+                {!isSelected && (
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                    <button
+                      className="px-6 py-3 bg-white text-black rounded-lg shadow-lg pointer-events-auto font-medium"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSectionId(section.id);
+                      }}
+                    >
+                      섹션 선택하기
+                    </button>
                   </div>
                 )}
 
-                <div className="relative">
-                  <div
-                    ref={sectionIndex === 0 ? gridRef : null}
-                    className="w-full grid grid-cols-12 md:grid-cols-24 gap-2"
-                    style={{
-                      gridTemplateRows: `repeat(${section.height}, ${cellHeight}px)`,
-                      height: `${
-                        section.height * cellHeight + (section.height - 1) * GAP
-                      }px`,
-                    }}
-                  >
-                    {/* 그리드 셀 */}
-                    {sectionGridCells.map((cell) => (
-                      <div
-                        key={cell.id}
-                        className={`transition-all duration-200 ${
-                          gridVisibleSectionId === section.id
-                            ? "bg-slate-200/40"
-                            : "bg-transparent"
-                        }`}
-                        data-row={cell.row}
-                        data-col={cell.col}
-                      />
-                    ))}
+                {/* 호버 시 어두운 배경 (선택되지 않은 섹션) */}
+                {!isSelected && (
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 pointer-events-none"></div>
+                )}
 
-                    {/* Pixi.js 도형 캔버스 */}
-                    {cellWidth > 0 && (
-                      <PixiCanvas
-                        sectionId={section.id}
-                        items={sectionItems.filter(
-                          (item): item is ShapeItem =>
-                            item.type === "circle" ||
-                            item.type === "triangle" ||
-                            item.type === "rectangle"
-                        )}
-                        cellWidth={cellWidth}
-                        cellHeight={cellHeight}
-                        gap={GAP}
-                        gridCols={gridCols}
-                        sectionHeight={section.height}
-                        isMobile={isMobile}
-                        onShapeDragStart={() =>
-                          handleShapeDragStart(section.id)
+                <div className="max-w-[1920px] mx-auto px-4">
+                  {/* 선택된 섹션에 컬러 피커 표시 */}
+                  {isSelected && (
+                    <div className="mb-4 flex items-center gap-2 bg-white p-3 rounded-lg shadow-md border border-gray-200">
+                      <label className="text-sm font-medium text-gray-700">
+                        배경색:
+                      </label>
+                      <input
+                        type="color"
+                        value={section.backgroundColor}
+                        onChange={(e) =>
+                          changeSectionBackgroundColor(
+                            section.id,
+                            e.target.value
+                          )
                         }
-                        onShapeDragEnd={(itemId, newX, newY) =>
-                          handleShapeDragEnd(section.id, itemId, newX, newY)
-                        }
+                        className="w-12 h-8 rounded cursor-pointer border border-gray-300"
                       />
-                    )}
+                      <input
+                        type="text"
+                        value={section.backgroundColor}
+                        onChange={(e) =>
+                          changeSectionBackgroundColor(
+                            section.id,
+                            e.target.value
+                          )
+                        }
+                        className="px-2 py-1 text-sm border border-gray-300 rounded w-24"
+                        placeholder="#ffffff"
+                      />
+                    </div>
+                  )}
 
-                    {/* 섹션 내 아이템들 (도형 제외) */}
-                    {cellWidth > 0 &&
-                      sectionItems
-                        .filter(
-                          (item) =>
-                            item.type !== "circle" &&
-                            item.type !== "triangle" &&
-                            item.type !== "rectangle"
-                        )
-                        .map((item) => {
-                          const currentItem = isMobile
-                            ? item.mobile
-                            : item.desktop;
+                  <div className="relative">
+                    <div
+                      ref={sectionIndex === 0 ? gridRef : null}
+                      className="w-full grid grid-cols-12 md:grid-cols-24 gap-2"
+                      style={{
+                        gridTemplateRows: `repeat(${section.height}, ${cellHeight}px)`,
+                        height: `${
+                          section.height * cellHeight +
+                          (section.height - 1) * GAP
+                        }px`,
+                      }}
+                    >
+                      {/* 그리드 셀 */}
+                      {sectionGridCells.map((cell) => (
+                        <div
+                          key={cell.id}
+                          className={`transition-all duration-200 ${
+                            gridVisibleSectionId === section.id
+                              ? "bg-slate-200/40"
+                              : "bg-transparent"
+                          }`}
+                          data-row={cell.row}
+                          data-col={cell.col}
+                        />
+                      ))}
 
-                          return (
-                            <Rnd
-                              key={item.id}
-                              position={{
-                                x: currentItem.x * (cellWidth + GAP),
-                                y: currentItem.y * (cellHeight + GAP),
-                              }}
-                              size={{
-                                width:
-                                  currentItem.width * cellWidth +
-                                  (currentItem.width - 1) * GAP,
-                                height:
-                                  currentItem.height * cellHeight +
-                                  (currentItem.height - 1) * GAP,
-                              }}
-                              onDragStart={() =>
-                                toggleGridVisibility(section.id, true)
-                              }
-                              onDrag={() => {
-                                if (gridVisibleSectionId !== section.id) {
-                                  toggleGridVisibility(section.id, true);
+                      {/* Pixi.js 도형 캔버스 */}
+                      {cellWidth > 0 && (
+                        <PixiCanvas
+                          sectionId={section.id}
+                          items={sectionItems.filter(
+                            (item): item is ShapeItem =>
+                              item.type === "circle" ||
+                              item.type === "triangle" ||
+                              item.type === "rectangle"
+                          )}
+                          cellWidth={cellWidth}
+                          cellHeight={cellHeight}
+                          gap={GAP}
+                          gridCols={gridCols}
+                          sectionHeight={section.height}
+                          isMobile={isMobile}
+                          onShapeDragStart={() =>
+                            handleShapeDragStart(section.id)
+                          }
+                          onShapeDragEnd={(itemId, newX, newY) =>
+                            handleShapeDragEnd(section.id, itemId, newX, newY)
+                          }
+                        />
+                      )}
+
+                      {/* 섹션 내 아이템들 (도형 제외) */}
+                      {cellWidth > 0 &&
+                        sectionItems
+                          .filter(
+                            (item) =>
+                              item.type !== "circle" &&
+                              item.type !== "triangle" &&
+                              item.type !== "rectangle"
+                          )
+                          .map((item) => {
+                            const currentItem = isMobile
+                              ? item.mobile
+                              : item.desktop;
+
+                            return (
+                              <Rnd
+                                key={item.id}
+                                position={{
+                                  x: currentItem.x * (cellWidth + GAP),
+                                  y: currentItem.y * (cellHeight + GAP),
+                                }}
+                                size={{
+                                  width:
+                                    currentItem.width * cellWidth +
+                                    (currentItem.width - 1) * GAP,
+                                  height:
+                                    currentItem.height * cellHeight +
+                                    (currentItem.height - 1) * GAP,
+                                }}
+                                onDragStart={() =>
+                                  toggleGridVisibility(section.id, true)
                                 }
-                              }}
-                              onDragStop={(_, d) => {
-                                toggleGridVisibility(section.id, false);
-                                const newCol = Math.round(
-                                  d.x / (cellWidth + GAP)
-                                );
-                                const newRow = Math.round(
-                                  d.y / (cellHeight + GAP)
-                                );
-                                updateItemPosition(
-                                  section.id,
-                                  item.id,
-                                  newCol,
-                                  newRow,
-                                  section.height
-                                );
-                              }}
-                              onResizeStart={() =>
-                                toggleGridVisibility(section.id, true)
-                              }
-                              onResize={() => {
-                                if (gridVisibleSectionId !== section.id) {
-                                  toggleGridVisibility(section.id, true);
+                                onDrag={() => {
+                                  if (gridVisibleSectionId !== section.id) {
+                                    toggleGridVisibility(section.id, true);
+                                  }
+                                }}
+                                onDragStop={(_, d) => {
+                                  toggleGridVisibility(section.id, false);
+                                  const newCol = Math.round(
+                                    d.x / (cellWidth + GAP)
+                                  );
+                                  const newRow = Math.round(
+                                    d.y / (cellHeight + GAP)
+                                  );
+                                  updateItemPosition(
+                                    section.id,
+                                    item.id,
+                                    newCol,
+                                    newRow,
+                                    section.height
+                                  );
+                                }}
+                                onResizeStart={() =>
+                                  toggleGridVisibility(section.id, true)
                                 }
-                              }}
-                              onResizeStop={(_, __, ref, ___, position) => {
-                                toggleGridVisibility(section.id, false);
+                                onResize={() => {
+                                  if (gridVisibleSectionId !== section.id) {
+                                    toggleGridVisibility(section.id, true);
+                                  }
+                                }}
+                                onResizeStop={(_, __, ref, ___, position) => {
+                                  toggleGridVisibility(section.id, false);
 
-                                const newWidth = Math.round(
-                                  ref.offsetWidth / (cellWidth + GAP)
-                                );
-                                const newHeight = Math.round(
-                                  ref.offsetHeight / (cellHeight + GAP)
-                                );
-                                const newCol = Math.round(
-                                  position.x / (cellWidth + GAP)
-                                );
-                                const newRow = Math.round(
-                                  position.y / (cellHeight + GAP)
-                                );
+                                  const newWidth = Math.round(
+                                    ref.offsetWidth / (cellWidth + GAP)
+                                  );
+                                  const newHeight = Math.round(
+                                    ref.offsetHeight / (cellHeight + GAP)
+                                  );
+                                  const newCol = Math.round(
+                                    position.x / (cellWidth + GAP)
+                                  );
+                                  const newRow = Math.round(
+                                    position.y / (cellHeight + GAP)
+                                  );
 
-                                setSections((prevSections) =>
-                                  prevSections.map((s) => {
-                                    if (s.id !== section.id) return s;
+                                  setSections((prevSections) =>
+                                    prevSections.map((s) => {
+                                      if (s.id !== section.id) return s;
 
-                                    return {
-                                      ...s,
-                                      items: s.items.map((i) => {
-                                        if (i.id !== item.id) return i;
+                                      return {
+                                        ...s,
+                                        items: s.items.map((i) => {
+                                          if (i.id !== item.id) return i;
 
-                                        const clampedX = Math.max(
-                                          0,
-                                          Math.min(gridCols - 1, newCol)
-                                        );
-                                        const clampedY = Math.max(
-                                          0,
-                                          Math.min(section.height - 1, newRow)
-                                        );
-                                        const clampedWidth = Math.max(
-                                          1,
-                                          Math.min(gridCols - newCol, newWidth)
-                                        );
-                                        const clampedHeight = Math.max(
-                                          1,
-                                          Math.min(
-                                            section.height - newRow,
-                                            newHeight
-                                          )
-                                        );
+                                          const clampedX = Math.max(
+                                            0,
+                                            Math.min(gridCols - 1, newCol)
+                                          );
+                                          const clampedY = Math.max(
+                                            0,
+                                            Math.min(section.height - 1, newRow)
+                                          );
+                                          const clampedWidth = Math.max(
+                                            1,
+                                            Math.min(
+                                              gridCols - newCol,
+                                              newWidth
+                                            )
+                                          );
+                                          const clampedHeight = Math.max(
+                                            1,
+                                            Math.min(
+                                              section.height - newRow,
+                                              newHeight
+                                            )
+                                          );
 
-                                        if (isMobile) {
-                                          return {
-                                            ...i,
-                                            mobile: {
-                                              x: clampedX,
-                                              y: clampedY,
-                                              width: clampedWidth,
-                                              height: clampedHeight,
-                                            },
-                                          };
-                                        } else {
-                                          return {
-                                            ...i,
-                                            desktop: {
-                                              x: clampedX,
-                                              y: clampedY,
-                                              width: clampedWidth,
-                                              height: clampedHeight,
-                                            },
-                                          };
-                                        }
-                                      }),
-                                    };
-                                  })
-                                );
-                              }}
-                              dragGrid={[cellWidth + GAP, cellHeight + GAP]}
-                              resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
-                              bounds="parent"
-                              className="absolute"
-                              enableUserSelectHack={false}
-                            >
-                              {item.type === "button" ? (
-                                <button className="w-full h-full bg-blue-500 hover:bg-blue-600 text-white rounded-md cursor-move flex items-center justify-center text-sm font-semibold shadow-md hover:shadow-lg transition-all border border-blue-600">
-                                  Button
-                                </button>
-                              ) : item.type === "text" ? (
-                                <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-700 text-sm font-normal shadow-md hover:shadow-lg transition-shadow border border-gray-200 px-2">
-                                  텍스트 입력
-                                </div>
-                              ) : (
-                                <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
-                              )}
-                            </Rnd>
-                          );
-                        })}
+                                          if (isMobile) {
+                                            return {
+                                              ...i,
+                                              mobile: {
+                                                x: clampedX,
+                                                y: clampedY,
+                                                width: clampedWidth,
+                                                height: clampedHeight,
+                                              },
+                                            };
+                                          } else {
+                                            return {
+                                              ...i,
+                                              desktop: {
+                                                x: clampedX,
+                                                y: clampedY,
+                                                width: clampedWidth,
+                                                height: clampedHeight,
+                                              },
+                                            };
+                                          }
+                                        }),
+                                      };
+                                    })
+                                  );
+                                }}
+                                dragGrid={[cellWidth + GAP, cellHeight + GAP]}
+                                resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
+                                bounds="parent"
+                                className="absolute"
+                                enableUserSelectHack={false}
+                              >
+                                {item.type === "button" ? (
+                                  <button className="w-full h-full bg-blue-500 hover:bg-blue-600 text-white rounded-md cursor-move flex items-center justify-center text-sm font-semibold shadow-md hover:shadow-lg transition-all border border-blue-600">
+                                    Button
+                                  </button>
+                                ) : item.type === "text" ? (
+                                  <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-700 text-sm font-normal shadow-md hover:shadow-lg transition-shadow border border-gray-200 px-2">
+                                    텍스트 입력
+                                  </div>
+                                ) : (
+                                  <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
+                                )}
+                              </Rnd>
+                            );
+                          })}
+                    </div>
+
+                    {/* 섹션 리사이즈 핸들 */}
+                    <div
+                      className="h-px border-t border-dashed border-gray-400 hover:border-blue-500 cursor-ns-resize transition-colors mt-4"
+                      onMouseDown={(e) =>
+                        handleResizeStart(section.id, section, e)
+                      }
+                    ></div>
                   </div>
-
-                  {/* 섹션 리사이즈 핸들 */}
-                  <div
-                    className="h-px border-t border-dashed border-gray-400 hover:border-blue-500 cursor-ns-resize transition-colors mt-4"
-                    onMouseDown={(e) =>
-                      handleResizeStart(section.id, section, e)
-                    }
-                  ></div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
 
         {/* RNB */}
         <div className="w-[200px] bg-white border-l border-gray-200"></div>
