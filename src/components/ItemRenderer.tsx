@@ -2,6 +2,7 @@ import { Rnd } from "react-rnd";
 import { Item } from "@/types/item";
 import { GAP } from "@/constants/grid";
 import { useGridStore } from "@/store/useGridStore";
+import { useSectionStore } from "@/store/useSectionStore";
 
 interface ItemRendererProps {
   items: Item[];
@@ -36,6 +37,10 @@ export default function ItemRenderer({
   const cellWidth = useGridStore((state) => state.cellWidth);
   const cellHeight = useGridStore((state) => state.cellHeight);
   const isMobile = useGridStore((state) => state.isMobile);
+
+  // 아이템 선택 상태
+  const selectedItemId = useSectionStore((state) => state.selectedItemId);
+  const setSelectedItemId = useSectionStore((state) => state.setSelectedItemId);
   // 섹션 내 아이템들 (도형 제외)
   const nonShapeItems = items.filter(
     (item) =>
@@ -48,6 +53,7 @@ export default function ItemRenderer({
     <>
       {nonShapeItems.map((item) => {
         const currentItem = isMobile ? item.mobile : item.desktop;
+        const isSelected = selectedItemId === item.id;
 
         return (
           <Rnd
@@ -58,13 +64,15 @@ export default function ItemRenderer({
             }}
             size={{
               width:
-                currentItem.width * cellWidth +
-                (currentItem.width - 1) * GAP,
+                currentItem.width * cellWidth + (currentItem.width - 1) * GAP,
               height:
                 currentItem.height * cellHeight +
                 (currentItem.height - 1) * GAP,
             }}
-            onDragStart={() => onToggleGridVisibility(sectionId, true)}
+            onDragStart={() => {
+              setSelectedItemId(item.id);
+              onToggleGridVisibility(sectionId, true);
+            }}
             onDrag={() => {
               if (gridVisibleSectionId !== sectionId) {
                 onToggleGridVisibility(sectionId, true);
@@ -85,9 +93,7 @@ export default function ItemRenderer({
             onResizeStop={(_, __, ref, ___, position) => {
               onToggleGridVisibility(sectionId, false);
 
-              const newWidth = Math.round(
-                ref.offsetWidth / (cellWidth + GAP)
-              );
+              const newWidth = Math.round(ref.offsetWidth / (cellWidth + GAP));
               const newHeight = Math.round(
                 ref.offsetHeight / (cellHeight + GAP)
               );
@@ -103,23 +109,39 @@ export default function ItemRenderer({
                 newHeight
               );
             }}
+            onClick={() => setSelectedItemId(item.id)}
             dragGrid={[cellWidth + GAP, cellHeight + GAP]}
             resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
             bounds="parent"
             className="absolute"
             enableUserSelectHack={false}
           >
-            {item.type === "button" ? (
-              <button className="w-full h-full bg-blue-500 hover:bg-blue-600 text-white rounded-md cursor-move flex items-center justify-center text-sm font-semibold shadow-md hover:shadow-lg transition-all border border-blue-600">
-                Button
-              </button>
-            ) : item.type === "text" ? (
-              <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-700 text-sm font-normal shadow-md hover:shadow-lg transition-shadow border border-gray-200 px-2">
-                텍스트 입력
-              </div>
-            ) : (
-              <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
-            )}
+            <div className="relative w-full h-full">
+              {/* 선택 표시 (조금 더 큰 사각형) */}
+              {isSelected && (
+                <div
+                  className="absolute border-1 border-dashed border-blue-500 rounded-md pointer-events-none transition-all"
+                  style={{
+                    left: "-6px",
+                    top: "-6px",
+                    right: "-6px",
+                    bottom: "-6px",
+                    boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.3)",
+                  }}
+                />
+              )}
+              {item.type === "button" ? (
+                <button className="w-full h-full bg-blue-500 hover:bg-blue-600 text-white rounded-md cursor-move flex items-center justify-center text-sm font-semibold shadow-md hover:shadow-lg transition-all border border-blue-600">
+                  Button
+                </button>
+              ) : item.type === "text" ? (
+                <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-700 text-sm font-normal shadow-md hover:shadow-lg transition-shadow border border-gray-200 px-2">
+                  텍스트 입력
+                </div>
+              ) : (
+                <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
+              )}
+            </div>
           </Rnd>
         );
       })}
