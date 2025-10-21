@@ -5,6 +5,7 @@ import { Rnd } from "react-rnd";
 import { v4 as uuidv4 } from "uuid";
 import PixiCanvas from "@/components/PixiCanvas";
 import { Item, ShapeItem } from "@/types/item";
+import Image from "next/image";
 
 type Section = {
   id: string;
@@ -32,7 +33,6 @@ export default function Home() {
 
   // 초기 ID 생성
   const initialSectionId = useRef(uuidv4());
-  const initialItemId = useRef(uuidv4());
 
   // 섹션 관리 (items도 포함)
   const [sections, setSections] = useState<Section[]>([
@@ -40,13 +40,7 @@ export default function Home() {
       id: initialSectionId.current,
       height: 24,
       backgroundColor: "#ffffff",
-      items: [
-        {
-          id: initialItemId.current,
-          desktop: { x: 0, y: 0, width: 1, height: 1 },
-          mobile: { x: 0, y: 0, width: 1, height: 1 },
-        },
-      ],
+      items: [],
     },
   ]);
 
@@ -83,11 +77,12 @@ export default function Home() {
   };
 
   // 아이템 추가 함수 (선택된 섹션에 추가)
-  const addItem = () => {
+  const addBox = () => {
     const newItem: Item = {
       id: uuidv4(),
       desktop: { x: 0, y: 0, width: 2, height: 2 },
       mobile: { x: 0, y: 0, width: 2, height: 2 },
+      type: "box",
     };
     setSections((prevSections) =>
       prevSections.map((s) =>
@@ -97,20 +92,20 @@ export default function Home() {
   };
 
   // 도형 추가 함수
-  const addShape = (shapeType: "circle" | "triangle" | "rectangle") => {
-    const newShape: Item = {
-      id: uuidv4(),
-      type: shapeType,
-      color: "#3b82f6", // 파란색 기본값
-      desktop: { x: 0, y: 0, width: 3, height: 3 },
-      mobile: { x: 0, y: 0, width: 3, height: 3 },
-    };
-    setSections((prevSections) =>
-      prevSections.map((s) =>
-        s.id === selectedSectionId ? { ...s, items: [...s.items, newShape] } : s
-      )
-    );
-  };
+  // const addShape = (shapeType: "circle" | "triangle" | "rectangle") => {
+  //   const newShape: Item = {
+  //     id: uuidv4(),
+  //     type: shapeType,
+  //     color: "#3b82f6", // 파란색 기본값
+  //     desktop: { x: 0, y: 0, width: 3, height: 3 },
+  //     mobile: { x: 0, y: 0, width: 3, height: 3 },
+  //   };
+  //   setSections((prevSections) =>
+  //     prevSections.map((s) =>
+  //       s.id === selectedSectionId ? { ...s, items: [...s.items, newShape] } : s
+  //     )
+  //   );
+  // };
 
   // 버튼 추가 함수
   const addButton = () => {
@@ -139,9 +134,7 @@ export default function Home() {
     };
     setSections((prevSections) =>
       prevSections.map((s) =>
-        s.id === selectedSectionId
-          ? { ...s, items: [...s.items, newText] }
-          : s
+        s.id === selectedSectionId ? { ...s, items: [...s.items, newText] } : s
       )
     );
   };
@@ -344,347 +337,373 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative">
-      {sections.map((section, sectionIndex) => {
-        // 각 섹션별 그리드 셀 생성
-        const sectionGridCells = Array.from(
-          { length: gridCols * section.height },
-          (_, index) => {
-            const row = Math.floor(index / gridCols);
-            const col = index % gridCols;
-            return { row, col, id: `section-${section.id}-cell-${row}-${col}` };
-          }
-        );
-
-        // 이 섹션에 속한 아이템들 (section.items 직접 사용)
-        const sectionItems = section.items;
-
-        const isSelected = section.id === selectedSectionId;
-
-        return (
-          <div
-            key={section.id}
-            className={`w-full py-2 relative cursor-pointer transition-all group`}
-            style={{ backgroundColor: section.backgroundColor }}
-            onClick={() => setSelectedSectionId(section.id)}
+      <header className="flex items-center border-b border-gray-200 h-[70px] px-5">
+        <section className="flex gap-2">
+          <Image src="/ditto.svg" width={40} height={40} alt="ditto_logo" />
+          <Image
+            src="/ditto_text.svg"
+            width={70}
+            height={40}
+            alt="ditto_logo"
+          />
+        </section>
+        <div className="ml-auto">
+          <button
+            onClick={savePage}
+            className="w-12 h-12 bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200"
+            title="페이지 저장"
           >
-            {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
-            {!isSelected && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                <button
-                  className="px-6 py-3 bg-white text-black rounded-lg shadow-lg pointer-events-auto font-medium"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedSectionId(section.id);
-                  }}
-                >
-                  섹션 선택하기
-                </button>
-              </div>
-            )}
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+              />
+            </svg>
+          </button>
+        </div>
+      </header>
+      <main className="flex">
+        {/* LNB */}
+        <div className="w-[200px] p-4 bg-white border-r border-gray-200">
+          <section className="grid grid-cols2 gap-2">
+            <button
+              onClick={addBox}
+              className="bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center text-2xl font-light border border-gray-200"
+              title="박스 추가"
+            >
+              +
+            </button>
+            <button
+              onClick={addButton}
+              className="bg-orange-500 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-orange-600 transition-all flex items-center justify-center border-2 border-orange-600 text-xs font-semibold"
+              title="버튼 추가"
+            >
+              BTN
+            </button>
+            <button
+              onClick={addText}
+              className="bg-gray-700 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-gray-800 transition-all flex items-center justify-center border-2 border-gray-800 text-xs font-semibold"
+              title="텍스트 추가"
+            >
+              T
+            </button>
+          </section>
+        </div>
 
-            {/* 호버 시 어두운 배경 (선택되지 않은 섹션) */}
-            {!isSelected && (
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 pointer-events-none"></div>
-            )}
+        {/* Canvas */}
+        {sections.map((section, sectionIndex) => {
+          // 각 섹션별 그리드 셀 생성
+          const sectionGridCells = Array.from(
+            { length: gridCols * section.height },
+            (_, index) => {
+              const row = Math.floor(index / gridCols);
+              const col = index % gridCols;
+              return {
+                row,
+                col,
+                id: `section-${section.id}-cell-${row}-${col}`,
+              };
+            }
+          );
 
-            <div className="max-w-[1920px] mx-auto px-4">
-              {/* 선택된 섹션에 컬러 피커 표시 */}
-              {isSelected && (
-                <div className="mb-4 flex items-center gap-2 bg-white p-3 rounded-lg shadow-md border border-gray-200">
-                  <label className="text-sm font-medium text-gray-700">
-                    배경색:
-                  </label>
-                  <input
-                    type="color"
-                    value={section.backgroundColor}
-                    onChange={(e) =>
-                      changeSectionBackgroundColor(section.id, e.target.value)
-                    }
-                    className="w-12 h-8 rounded cursor-pointer border border-gray-300"
-                  />
-                  <input
-                    type="text"
-                    value={section.backgroundColor}
-                    onChange={(e) =>
-                      changeSectionBackgroundColor(section.id, e.target.value)
-                    }
-                    className="px-2 py-1 text-sm border border-gray-300 rounded w-24"
-                    placeholder="#ffffff"
-                  />
+          // 이 섹션에 속한 아이템들 (section.items 직접 사용)
+          const sectionItems = section.items;
+
+          const isSelected = section.id === selectedSectionId;
+
+          return (
+            <div
+              key={section.id}
+              className={`w-full py-2 relative cursor-pointer transition-all group`}
+              style={{ backgroundColor: section.backgroundColor }}
+              onClick={() => setSelectedSectionId(section.id)}
+            >
+              {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
+              {!isSelected && (
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                  <button
+                    className="px-6 py-3 bg-white text-black rounded-lg shadow-lg pointer-events-auto font-medium"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedSectionId(section.id);
+                    }}
+                  >
+                    섹션 선택하기
+                  </button>
                 </div>
               )}
 
-              <div className="relative">
-                <div
-                  ref={sectionIndex === 0 ? gridRef : null}
-                  className="w-full grid grid-cols-12 md:grid-cols-24 gap-2"
-                  style={{
-                    gridTemplateRows: `repeat(${section.height}, ${cellHeight}px)`,
-                    height: `${
-                      section.height * cellHeight + (section.height - 1) * GAP
-                    }px`,
-                  }}
-                >
-                  {/* 그리드 셀 */}
-                  {sectionGridCells.map((cell) => (
-                    <div
-                      key={cell.id}
-                      className={`transition-all duration-200 ${
-                        gridVisibleSectionId === section.id
-                          ? "bg-slate-200/40"
-                          : "bg-transparent"
-                      }`}
-                      data-row={cell.row}
-                      data-col={cell.col}
-                    />
-                  ))}
+              {/* 호버 시 어두운 배경 (선택되지 않은 섹션) */}
+              {!isSelected && (
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 pointer-events-none"></div>
+              )}
 
-                  {/* Pixi.js 도형 캔버스 */}
-                  {cellWidth > 0 && (
-                    <PixiCanvas
-                      sectionId={section.id}
-                      items={sectionItems.filter(
-                        (item): item is ShapeItem =>
-                          item.type === "circle" ||
-                          item.type === "triangle" ||
-                          item.type === "rectangle"
-                      )}
-                      cellWidth={cellWidth}
-                      cellHeight={cellHeight}
-                      gap={GAP}
-                      gridCols={gridCols}
-                      sectionHeight={section.height}
-                      isMobile={isMobile}
-                      onShapeDragStart={() => handleShapeDragStart(section.id)}
-                      onShapeDragEnd={(itemId, newX, newY) =>
-                        handleShapeDragEnd(section.id, itemId, newX, newY)
+              <div className="max-w-[1920px] mx-auto px-4">
+                {/* 선택된 섹션에 컬러 피커 표시 */}
+                {isSelected && (
+                  <div className="mb-4 flex items-center gap-2 bg-white p-3 rounded-lg shadow-md border border-gray-200">
+                    <label className="text-sm font-medium text-gray-700">
+                      배경색:
+                    </label>
+                    <input
+                      type="color"
+                      value={section.backgroundColor}
+                      onChange={(e) =>
+                        changeSectionBackgroundColor(section.id, e.target.value)
                       }
+                      className="w-12 h-8 rounded cursor-pointer border border-gray-300"
                     />
-                  )}
+                    <input
+                      type="text"
+                      value={section.backgroundColor}
+                      onChange={(e) =>
+                        changeSectionBackgroundColor(section.id, e.target.value)
+                      }
+                      className="px-2 py-1 text-sm border border-gray-300 rounded w-24"
+                      placeholder="#ffffff"
+                    />
+                  </div>
+                )}
 
-                  {/* 섹션 내 아이템들 (도형 제외) */}
-                  {cellWidth > 0 &&
-                    sectionItems
-                      .filter(
-                        (item) =>
-                          item.type !== "circle" &&
-                          item.type !== "triangle" &&
-                          item.type !== "rectangle"
-                      )
-                      .map((item) => {
-                        const currentItem = isMobile
-                          ? item.mobile
-                          : item.desktop;
+                <div className="relative">
+                  <div
+                    ref={sectionIndex === 0 ? gridRef : null}
+                    className="w-full grid grid-cols-12 md:grid-cols-24 gap-2"
+                    style={{
+                      gridTemplateRows: `repeat(${section.height}, ${cellHeight}px)`,
+                      height: `${
+                        section.height * cellHeight + (section.height - 1) * GAP
+                      }px`,
+                    }}
+                  >
+                    {/* 그리드 셀 */}
+                    {sectionGridCells.map((cell) => (
+                      <div
+                        key={cell.id}
+                        className={`transition-all duration-200 ${
+                          gridVisibleSectionId === section.id
+                            ? "bg-slate-200/40"
+                            : "bg-transparent"
+                        }`}
+                        data-row={cell.row}
+                        data-col={cell.col}
+                      />
+                    ))}
 
-                        return (
-                          <Rnd
-                            key={item.id}
-                            position={{
-                              x: currentItem.x * (cellWidth + GAP),
-                              y: currentItem.y * (cellHeight + GAP),
-                            }}
-                            size={{
-                              width:
-                                currentItem.width * cellWidth +
-                                (currentItem.width - 1) * GAP,
-                              height:
-                                currentItem.height * cellHeight +
-                                (currentItem.height - 1) * GAP,
-                            }}
-                            onDragStart={() =>
-                              toggleGridVisibility(section.id, true)
-                            }
-                            onDrag={() => {
-                              if (gridVisibleSectionId !== section.id) {
-                                toggleGridVisibility(section.id, true);
+                    {/* Pixi.js 도형 캔버스 */}
+                    {cellWidth > 0 && (
+                      <PixiCanvas
+                        sectionId={section.id}
+                        items={sectionItems.filter(
+                          (item): item is ShapeItem =>
+                            item.type === "circle" ||
+                            item.type === "triangle" ||
+                            item.type === "rectangle"
+                        )}
+                        cellWidth={cellWidth}
+                        cellHeight={cellHeight}
+                        gap={GAP}
+                        gridCols={gridCols}
+                        sectionHeight={section.height}
+                        isMobile={isMobile}
+                        onShapeDragStart={() =>
+                          handleShapeDragStart(section.id)
+                        }
+                        onShapeDragEnd={(itemId, newX, newY) =>
+                          handleShapeDragEnd(section.id, itemId, newX, newY)
+                        }
+                      />
+                    )}
+
+                    {/* 섹션 내 아이템들 (도형 제외) */}
+                    {cellWidth > 0 &&
+                      sectionItems
+                        .filter(
+                          (item) =>
+                            item.type !== "circle" &&
+                            item.type !== "triangle" &&
+                            item.type !== "rectangle"
+                        )
+                        .map((item) => {
+                          const currentItem = isMobile
+                            ? item.mobile
+                            : item.desktop;
+
+                          return (
+                            <Rnd
+                              key={item.id}
+                              position={{
+                                x: currentItem.x * (cellWidth + GAP),
+                                y: currentItem.y * (cellHeight + GAP),
+                              }}
+                              size={{
+                                width:
+                                  currentItem.width * cellWidth +
+                                  (currentItem.width - 1) * GAP,
+                                height:
+                                  currentItem.height * cellHeight +
+                                  (currentItem.height - 1) * GAP,
+                              }}
+                              onDragStart={() =>
+                                toggleGridVisibility(section.id, true)
                               }
-                            }}
-                            onDragStop={(_, d) => {
-                              toggleGridVisibility(section.id, false);
-                              const newCol = Math.round(
-                                d.x / (cellWidth + GAP)
-                              );
-                              const newRow = Math.round(
-                                d.y / (cellHeight + GAP)
-                              );
-                              updateItemPosition(
-                                section.id,
-                                item.id,
-                                newCol,
-                                newRow,
-                                section.height
-                              );
-                            }}
-                            onResizeStart={() =>
-                              toggleGridVisibility(section.id, true)
-                            }
-                            onResize={() => {
-                              if (gridVisibleSectionId !== section.id) {
-                                toggleGridVisibility(section.id, true);
+                              onDrag={() => {
+                                if (gridVisibleSectionId !== section.id) {
+                                  toggleGridVisibility(section.id, true);
+                                }
+                              }}
+                              onDragStop={(_, d) => {
+                                toggleGridVisibility(section.id, false);
+                                const newCol = Math.round(
+                                  d.x / (cellWidth + GAP)
+                                );
+                                const newRow = Math.round(
+                                  d.y / (cellHeight + GAP)
+                                );
+                                updateItemPosition(
+                                  section.id,
+                                  item.id,
+                                  newCol,
+                                  newRow,
+                                  section.height
+                                );
+                              }}
+                              onResizeStart={() =>
+                                toggleGridVisibility(section.id, true)
                               }
-                            }}
-                            onResizeStop={(_, __, ref, ___, position) => {
-                              toggleGridVisibility(section.id, false);
+                              onResize={() => {
+                                if (gridVisibleSectionId !== section.id) {
+                                  toggleGridVisibility(section.id, true);
+                                }
+                              }}
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                toggleGridVisibility(section.id, false);
 
-                              const newWidth = Math.round(
-                                ref.offsetWidth / (cellWidth + GAP)
-                              );
-                              const newHeight = Math.round(
-                                ref.offsetHeight / (cellHeight + GAP)
-                              );
-                              const newCol = Math.round(
-                                position.x / (cellWidth + GAP)
-                              );
-                              const newRow = Math.round(
-                                position.y / (cellHeight + GAP)
-                              );
+                                const newWidth = Math.round(
+                                  ref.offsetWidth / (cellWidth + GAP)
+                                );
+                                const newHeight = Math.round(
+                                  ref.offsetHeight / (cellHeight + GAP)
+                                );
+                                const newCol = Math.round(
+                                  position.x / (cellWidth + GAP)
+                                );
+                                const newRow = Math.round(
+                                  position.y / (cellHeight + GAP)
+                                );
 
-                              setSections((prevSections) =>
-                                prevSections.map((s) => {
-                                  if (s.id !== section.id) return s;
+                                setSections((prevSections) =>
+                                  prevSections.map((s) => {
+                                    if (s.id !== section.id) return s;
 
-                                  return {
-                                    ...s,
-                                    items: s.items.map((i) => {
-                                      if (i.id !== item.id) return i;
+                                    return {
+                                      ...s,
+                                      items: s.items.map((i) => {
+                                        if (i.id !== item.id) return i;
 
-                                      const clampedX = Math.max(
-                                        0,
-                                        Math.min(gridCols - 1, newCol)
-                                      );
-                                      const clampedY = Math.max(
-                                        0,
-                                        Math.min(section.height - 1, newRow)
-                                      );
-                                      const clampedWidth = Math.max(
-                                        1,
-                                        Math.min(gridCols - newCol, newWidth)
-                                      );
-                                      const clampedHeight = Math.max(
-                                        1,
-                                        Math.min(
-                                          section.height - newRow,
-                                          newHeight
-                                        )
-                                      );
+                                        const clampedX = Math.max(
+                                          0,
+                                          Math.min(gridCols - 1, newCol)
+                                        );
+                                        const clampedY = Math.max(
+                                          0,
+                                          Math.min(section.height - 1, newRow)
+                                        );
+                                        const clampedWidth = Math.max(
+                                          1,
+                                          Math.min(gridCols - newCol, newWidth)
+                                        );
+                                        const clampedHeight = Math.max(
+                                          1,
+                                          Math.min(
+                                            section.height - newRow,
+                                            newHeight
+                                          )
+                                        );
 
-                                      if (isMobile) {
-                                        return {
-                                          ...i,
-                                          mobile: {
-                                            x: clampedX,
-                                            y: clampedY,
-                                            width: clampedWidth,
-                                            height: clampedHeight,
-                                          },
-                                        };
-                                      } else {
-                                        return {
-                                          ...i,
-                                          desktop: {
-                                            x: clampedX,
-                                            y: clampedY,
-                                            width: clampedWidth,
-                                            height: clampedHeight,
-                                          },
-                                        };
-                                      }
-                                    }),
-                                  };
-                                })
-                              );
-                            }}
-                            dragGrid={[cellWidth + GAP, cellHeight + GAP]}
-                            resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
-                            bounds="parent"
-                            className="absolute"
-                            enableUserSelectHack={false}
-                          >
-                            {item.type === "button" ? (
-                              <button className="w-full h-full bg-blue-500 hover:bg-blue-600 text-white rounded-md cursor-move flex items-center justify-center text-sm font-semibold shadow-md hover:shadow-lg transition-all border border-blue-600">
-                                Button
-                              </button>
-                            ) : item.type === "text" ? (
-                              <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-700 text-sm font-normal shadow-md hover:shadow-lg transition-shadow border border-gray-200 px-2">
-                                텍스트 입력
-                              </div>
-                            ) : (
-                              <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
-                            )}
-                          </Rnd>
-                        );
-                      })}
+                                        if (isMobile) {
+                                          return {
+                                            ...i,
+                                            mobile: {
+                                              x: clampedX,
+                                              y: clampedY,
+                                              width: clampedWidth,
+                                              height: clampedHeight,
+                                            },
+                                          };
+                                        } else {
+                                          return {
+                                            ...i,
+                                            desktop: {
+                                              x: clampedX,
+                                              y: clampedY,
+                                              width: clampedWidth,
+                                              height: clampedHeight,
+                                            },
+                                          };
+                                        }
+                                      }),
+                                    };
+                                  })
+                                );
+                              }}
+                              dragGrid={[cellWidth + GAP, cellHeight + GAP]}
+                              resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
+                              bounds="parent"
+                              className="absolute"
+                              enableUserSelectHack={false}
+                            >
+                              {item.type === "button" ? (
+                                <button className="w-full h-full bg-blue-500 hover:bg-blue-600 text-white rounded-md cursor-move flex items-center justify-center text-sm font-semibold shadow-md hover:shadow-lg transition-all border border-blue-600">
+                                  Button
+                                </button>
+                              ) : item.type === "text" ? (
+                                <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-700 text-sm font-normal shadow-md hover:shadow-lg transition-shadow border border-gray-200 px-2">
+                                  텍스트 입력
+                                </div>
+                              ) : (
+                                <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
+                              )}
+                            </Rnd>
+                          );
+                        })}
+                  </div>
+
+                  {/* 섹션 리사이즈 핸들 */}
+                  <div
+                    className="h-px border-t border-dashed border-gray-400 hover:border-blue-500 cursor-ns-resize transition-colors mt-4"
+                    onMouseDown={(e) =>
+                      handleResizeStart(section.id, section, e)
+                    }
+                  ></div>
                 </div>
-
-                {/* 섹션 리사이즈 핸들 */}
-                <div
-                  className="h-px border-t border-dashed border-gray-400 hover:border-blue-500 cursor-ns-resize transition-colors mt-4"
-                  onMouseDown={(e) => handleResizeStart(section.id, section, e)}
-                ></div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+
+        {/* RNB */}
+        <div className="w-[200px] bg-white border-l border-gray-200"></div>
+      </main>
 
       {/* Floating 버튼들 */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex gap-3">
         <button
-          onClick={savePage}
-          className="w-12 h-12 bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200"
-          title="페이지 저장"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-            />
-          </svg>
-        </button>
-        <button
           onClick={addSection}
-          className="w-12 h-12 bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200"
+          className="px-4 py-2 bg-white text-gray-700 font-bold rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200"
           title="섹션 추가"
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-            <rect
-              x="4"
-              y="6"
-              width="16"
-              height="12"
-              rx="2"
-              strokeWidth={2}
-              fill="none"
-            />
-          </svg>
-        </button>
-        <button
-          onClick={addItem}
-          className="w-12 h-12 bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center text-2xl font-light border border-gray-200"
-          title="아이템 추가"
-        >
-          +
+          + section
         </button>
         {/* 도형 추가 버튼들 */}
-        <button
+        {/* <button
           onClick={() => addShape("circle")}
           className="w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:shadow-xl hover:bg-blue-600 transition-all flex items-center justify-center border-2 border-blue-600"
           title="동그라미 추가"
@@ -703,21 +722,7 @@ export default function Home() {
           title="사각형 추가"
         >
           ▪
-        </button>
-        <button
-          onClick={addButton}
-          className="w-12 h-12 bg-orange-500 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-orange-600 transition-all flex items-center justify-center border-2 border-orange-600 text-xs font-semibold"
-          title="버튼 추가"
-        >
-          BTN
-        </button>
-        <button
-          onClick={addText}
-          className="w-12 h-12 bg-gray-700 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-gray-800 transition-all flex items-center justify-center border-2 border-gray-800 text-xs font-semibold"
-          title="텍스트 추가"
-        >
-          T
-        </button>
+        </button> */}
       </div>
     </div>
   );
