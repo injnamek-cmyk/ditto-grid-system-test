@@ -20,11 +20,16 @@ import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginFormSchema, LoginFormShemaType } from "@/schemas/authSchemas";
+import { useRouter } from "next/navigation";
+import { useUserStore } from "@/store/useUserStore";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
+  const { setUser } = useUserStore();
+
   const {
     control,
     handleSubmit,
@@ -39,7 +44,8 @@ export function LoginForm({
 
   const onSubmit = (data: LoginFormShemaType) => {
     if (isValid) {
-      console.log("폼 데이터:", data);
+      setUser(data);
+      router.push("/");
     } else {
       console.log("검증 실패, 에러:", errors);
     }
