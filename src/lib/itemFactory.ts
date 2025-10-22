@@ -19,8 +19,10 @@ export function createItem(
   const item: Item = {
     id: uuidv4(),
     type,
-    desktop: { x, y, ...config.desktop },
-    mobile: { x, y, ...config.mobile },
+    style: {
+      desktop: { position: { x, y }, ...config.desktop },
+      mobile: { position: { x, y }, ...config.mobile },
+    },
   };
 
   // box 타입만 children 속성 추가

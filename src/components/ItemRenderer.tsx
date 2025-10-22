@@ -64,15 +64,15 @@ export default function ItemRenderer({
   return (
     <>
       {nonShapeItems.map((item) => {
-        const currentItem = isMobile ? item.mobile : item.desktop;
+        const currentItem = isMobile ? item.style.mobile : item.style.desktop;
         const isSelected = selectedItemId === item.id;
 
         return (
           <Rnd
             key={item.id}
             position={{
-              x: currentItem.x * (cellWidth + GAP),
-              y: currentItem.y * (cellHeight + GAP),
+              x: currentItem.position.x * (cellWidth + GAP),
+              y: currentItem.position.y * (cellHeight + GAP),
             }}
             size={{
               width:

@@ -52,7 +52,11 @@ interface UsePageStateReturn {
     y: number
   ) => void;
   updateSectionHeight: (sectionId: string, newHeight: number) => void;
-  updateItemContent: (sectionId: string, itemId: string, content: string) => void;
+  updateItemContent: (
+    sectionId: string,
+    itemId: string,
+    content: string
+  ) => void;
   savePage: () => void;
 }
 
@@ -72,9 +76,8 @@ export const usePageState = (): UsePageStateReturn => {
     },
   ]);
 
-  const [selectedSectionId, setSelectedSectionId] = useState<string>(
-    initialSectionId
-  );
+  const [selectedSectionId, setSelectedSectionId] =
+    useState<string>(initialSectionId);
 
   // 앱 시작 시 로컬 스토리지에서 페이지 데이터 불러오기
   useEffect(() => {
@@ -122,27 +125,31 @@ export const usePageState = (): UsePageStateReturn => {
 
   // 특정 위치에 아이템 추가
   const addItemAtPosition = useCallback(
-    (
-      sectionId: string,
-      type: AddableItemType,
-      x: number,
-      y: number
-    ) => {
+    (sectionId: string, type: AddableItemType, x: number, y: number) => {
       const newItem: Item = {
         id: uuidv4(),
         type: type as "box" | "button" | "text",
-        desktop:
-          type === "button"
-            ? { x, y, width: 3, height: 2 }
-            : type === "text"
-            ? { x, y, width: 2, height: 1 }
-            : { x, y, width: 2, height: 2 },
-        mobile:
-          type === "button"
-            ? { x, y, width: 2, height: 1 }
-            : type === "text"
-            ? { x, y, width: 2, height: 1 }
-            : { x, y, width: 2, height: 2 },
+        style: {
+          desktop:
+            type === "button"
+              ? {
+                  position: {
+                    x,
+                    y,
+                  },
+                  width: 3,
+                  height: 2,
+                }
+              : type === "text"
+              ? { position: { x, y }, width: 2, height: 1 }
+              : { position: { x, y }, width: 2, height: 2 },
+          mobile:
+            type === "button"
+              ? { position: { x, y }, width: 2, height: 1 }
+              : type === "text"
+              ? { position: { x, y }, width: 2, height: 1 }
+              : { position: { x, y }, width: 2, height: 2 },
+        },
       };
 
       if (type === "box") {
@@ -196,12 +203,24 @@ export const usePageState = (): UsePageStateReturn => {
               if (isMobile) {
                 return {
                   ...i,
-                  mobile: { ...i.mobile, x: clampedX, y: clampedY },
+                  style: {
+                    ...i.style,
+                    mobile: {
+                      ...i.style.mobile,
+                      position: { x: clampedX, y: clampedY },
+                    },
+                  },
                 };
               } else {
                 return {
                   ...i,
-                  desktop: { ...i.desktop, x: clampedX, y: clampedY },
+                  style: {
+                    ...i.style,
+                    desktop: {
+                      ...i.style.desktop,
+                      position: { x: clampedX, y: clampedY },
+                    },
+                  },
                 };
               }
             }),
@@ -248,21 +267,25 @@ export const usePageState = (): UsePageStateReturn => {
               if (isMobile) {
                 return {
                   ...i,
-                  mobile: {
-                    x: clampedX,
-                    y: clampedY,
-                    width: clampedWidth,
-                    height: clampedHeight,
+                  style: {
+                    ...i.style,
+                    mobile: {
+                      position: { x: clampedX, y: clampedY },
+                      width: clampedWidth,
+                      height: clampedHeight,
+                    },
                   },
                 };
               } else {
                 return {
                   ...i,
-                  desktop: {
-                    x: clampedX,
-                    y: clampedY,
-                    width: clampedWidth,
-                    height: clampedHeight,
+                  style: {
+                    ...i.style,
+                    desktop: {
+                      position: { x: clampedX, y: clampedY },
+                      width: clampedWidth,
+                      height: clampedHeight,
+                    },
                   },
                 };
               }
@@ -275,13 +298,14 @@ export const usePageState = (): UsePageStateReturn => {
   );
 
   // 섹션 높이 업데이트
-  const updateSectionHeight = useCallback((sectionId: string, newHeight: number) => {
-    setSections((prev) =>
-      prev.map((s) =>
-        s.id === sectionId ? { ...s, height: newHeight } : s
-      )
-    );
-  }, []);
+  const updateSectionHeight = useCallback(
+    (sectionId: string, newHeight: number) => {
+      setSections((prev) =>
+        prev.map((s) => (s.id === sectionId ? { ...s, height: newHeight } : s))
+      );
+    },
+    []
+  );
 
   // 아이템 콘텐츠(텍스트) 업데이트
   const updateItemContent = useCallback(
