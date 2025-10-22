@@ -13,7 +13,7 @@ import { useGridStore } from "@/store/useGridStore";
 import { useSectionStore } from "@/store/useSectionStore";
 import { AddableItemType } from "@/types/item";
 
-export default function Home() {
+export default function StudioPage() {
   // 반응형 그리드 크기 계산
   const { cellWidth, cellHeight, gridCols, isMobile, gridRef } =
     useGridDimensions();
