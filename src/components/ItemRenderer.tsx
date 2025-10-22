@@ -1,5 +1,5 @@
 import { Rnd } from "react-rnd";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Item } from "@/types/item";
 import { GAP } from "@/constants/grid";
 import { useGridStore } from "@/store/useGridStore";
@@ -121,7 +121,10 @@ export default function ItemRenderer({
                 newHeight
               );
             }}
-            onClick={() => setSelectedItemId(item.id)}
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              setSelectedItemId(item.id);
+            }}
             dragGrid={[cellWidth + GAP, cellHeight + GAP]}
             resizeGrid={[cellWidth + GAP, cellHeight + GAP]}
             bounds="parent"

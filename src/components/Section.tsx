@@ -6,6 +6,7 @@ import { Section as SectionType } from "@/hooks/usePageState";
 import { ShapeItem } from "@/types/item";
 import { GAP } from "@/constants/grid";
 import { useGridStore } from "@/store/useGridStore";
+import { useSectionStore } from "@/store/useSectionStore";
 
 interface SectionProps {
   section: SectionType;
@@ -22,13 +23,30 @@ interface SectionProps {
   sectionIndex: number;
   onSectionClick: (sectionId: string) => void;
   onBackgroundColorChange: (sectionId: string, color: string) => void;
-  onSectionDragOver: (e: React.DragEvent<HTMLDivElement>, sectionId: string, height: number) => void;
+  onSectionDragOver: (
+    e: React.DragEvent<HTMLDivElement>,
+    sectionId: string,
+    height: number
+  ) => void;
   onSectionDragLeave: (e: React.DragEvent<HTMLDivElement>) => void;
-  onSectionDrop: (e: React.DragEvent<HTMLDivElement>, sectionId: string) => void;
+  onSectionDrop: (
+    e: React.DragEvent<HTMLDivElement>,
+    sectionId: string
+  ) => void;
   onShapeDragStart: (sectionId: string) => void;
-  onShapeDragEnd: (sectionId: string, itemId: string, newX: number, newY: number) => void;
+  onShapeDragEnd: (
+    sectionId: string,
+    itemId: string,
+    newX: number,
+    newY: number
+  ) => void;
   onToggleGridVisibility: (sectionId: string, visible: boolean) => void;
-  onItemDragStop: (sectionId: string, itemId: string, newCol: number, newRow: number) => void;
+  onItemDragStop: (
+    sectionId: string,
+    itemId: string,
+    newCol: number,
+    newRow: number
+  ) => void;
   onItemResizeStop: (
     sectionId: string,
     itemId: string,
@@ -37,8 +55,16 @@ interface SectionProps {
     newWidth: number,
     newHeight: number
   ) => void;
-  onItemContentUpdate?: (sectionId: string, itemId: string, content: string) => void;
-  onSectionResizeStart: (sectionId: string, height: number, e: React.MouseEvent<HTMLDivElement>) => void;
+  onItemContentUpdate?: (
+    sectionId: string,
+    itemId: string,
+    content: string
+  ) => void;
+  onSectionResizeStart: (
+    sectionId: string,
+    height: number,
+    e: React.MouseEvent<HTMLDivElement>
+  ) => void;
 }
 
 export default function Section({
@@ -66,6 +92,8 @@ export default function Section({
   const cellHeight = useGridStore((state) => state.cellHeight);
   const gridCols = useGridStore((state) => state.gridCols);
   const isMobile = useGridStore((state) => state.isMobile);
+
+  const { selectedItemId, setSelectedItemId } = useSectionStore();
 
   const shapeItems = section.items.filter(
     (item): item is ShapeItem =>
@@ -103,13 +131,14 @@ export default function Section({
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 pointer-events-none"></div>
       )}
 
-      <div className="max-w-[1920px] mx-auto px-4">
+      <div
+        className="max-w-[1920px] mx-auto px-4"
+        onClick={() => setSelectedItemId(null)}
+      >
         {/* 선택된 섹션에 컬러 피커 표시 */}
         {isSelected && (
           <div className="mb-4 flex items-center gap-2 bg-white p-3 rounded-lg shadow-md border border-gray-200">
-            <label className="text-sm font-medium text-gray-700">
-              배경색:
-            </label>
+            <label className="text-sm font-medium text-gray-700">배경색:</label>
             <input
               type="color"
               value={section.backgroundColor}
