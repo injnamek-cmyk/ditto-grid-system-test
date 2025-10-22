@@ -11,16 +11,12 @@ import { useGridVisibility } from "@/hooks/useGridVisibility";
 import { useGridDimensions } from "@/hooks/useGridDimensions";
 import { useGridStore } from "@/store/useGridStore";
 import { useSectionStore } from "@/store/useSectionStore";
+import { AddableItemType } from "@/types/item";
 
 export default function Home() {
   // 반응형 그리드 크기 계산
-  const {
-    cellWidth,
-    cellHeight,
-    gridCols,
-    isMobile,
-    gridRef,
-  } = useGridDimensions();
+  const { cellWidth, cellHeight, gridCols, isMobile, gridRef } =
+    useGridDimensions();
 
   // 페이지 상태 관리
   const {
@@ -55,14 +51,9 @@ export default function Home() {
     }
   }, [pageSelectedSectionId, setSelectedSectionId]);
 
-
   // 그리드 가시성 관리
-  const {
-    gridVisibleSectionId,
-    toggleGridVisibility,
-    showGrid,
-    hideGrid,
-  } = useGridVisibility();
+  const { gridVisibleSectionId, toggleGridVisibility, showGrid, hideGrid } =
+    useGridVisibility();
 
   // 섹션 리사이즈 훅
   const {
@@ -89,16 +80,8 @@ export default function Home() {
   });
 
   // LNB에서 아이템 추가 헬퍼 함수
-  const addBox = () => {
-    addItemAtPosition(selectedSectionId, "box", 0, 0);
-  };
-
-  const addButton = () => {
-    addItemAtPosition(selectedSectionId, "button", 0, 0);
-  };
-
-  const addText = () => {
-    addItemAtPosition(selectedSectionId, "text", 0, 0);
+  const addItem = (type: AddableItemType) => {
+    addItemAtPosition(selectedSectionId, type, 0, 0);
   };
 
   // 도형 드래그 시작 핸들러
@@ -191,12 +174,7 @@ export default function Home() {
       <Header savePage={savePage} />
       <main className="flex pb-10">
         {/* LNB */}
-        <LeftNavigationBar
-          onAddBox={addBox}
-          onAddButton={addButton}
-          onAddText={addText}
-          onDragStart={handleLNBDragStart}
-        />
+        <LeftNavigationBar addItem={addItem} onDragStart={handleLNBDragStart} />
 
         {/* Canvas */}
         <Canvas

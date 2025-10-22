@@ -1,11 +1,10 @@
 "use client";
 
+import { AddableItemType } from "@/types/item";
 import React from "react";
 
 interface LeftNavigationBarProps {
-  onAddBox: () => void;
-  onAddButton: () => void;
-  onAddText: () => void;
+  addItem: (type: AddableItemType) => void;
   onDragStart?: (
     e: React.DragEvent<HTMLButtonElement>,
     itemType: string
@@ -13,16 +12,14 @@ interface LeftNavigationBarProps {
 }
 
 export default function LeftNavigationBar({
-  onAddBox,
-  onAddButton,
-  onAddText,
+  addItem,
   onDragStart,
 }: LeftNavigationBarProps) {
   return (
     <div className="w-[200px] p-4 bg-white border-r border-gray-200">
       <section className="grid grid-cols2 gap-2 sticky top-[84px]">
         <button
-          onClick={onAddBox}
+          onClick={() => addItem("box")}
           draggable
           onDragStart={(e) => onDragStart?.(e, "box")}
           className="bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center text-2xl font-light border border-gray-200 cursor-grab active:cursor-grabbing"
@@ -31,7 +28,7 @@ export default function LeftNavigationBar({
           +
         </button>
         <button
-          onClick={onAddButton}
+          onClick={() => addItem("button")}
           draggable
           onDragStart={(e) => onDragStart?.(e, "button")}
           className="bg-orange-500 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-orange-600 transition-all flex items-center justify-center border-2 border-orange-600 text-xs font-semibold cursor-grab active:cursor-grabbing"
@@ -40,7 +37,7 @@ export default function LeftNavigationBar({
           BTN
         </button>
         <button
-          onClick={onAddText}
+          onClick={() => addItem("text")}
           draggable
           onDragStart={(e) => onDragStart?.(e, "text")}
           className="bg-gray-700 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-gray-800 transition-all flex items-center justify-center border-2 border-gray-800 text-xs font-semibold cursor-grab active:cursor-grabbing"

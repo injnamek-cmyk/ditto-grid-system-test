@@ -18,7 +18,6 @@ type PixiCanvasProps = {
 };
 
 export default function PixiCanvas({
-  sectionId,
   items,
   cellWidth,
   cellHeight,
@@ -96,7 +95,7 @@ export default function PixiCanvas({
     // 도형 생성 함수 (useEffect 내부에서 정의하여 최신 cellWidth/cellHeight 참조)
     const createShape = (item: ShapeItem): PIXI.Graphics => {
       const graphics = new PIXI.Graphics();
-      const currentItem = isMobile ? item.mobile : item.desktop;
+      const currentItem = isMobile ? item.style.mobile : item.style.desktop;
       const color = item.color
         ? parseInt(item.color.replace("#", ""), 16)
         : 0x3b82f6;
@@ -144,7 +143,7 @@ export default function PixiCanvas({
 
     // 도형 추가 또는 업데이트
     items.forEach((item) => {
-      const currentItem = isMobile ? item.mobile : item.desktop;
+      const currentItem = isMobile ? item.style.mobile : item.style.desktop;
       const container = shapesRef.current.get(item.id);
 
       if (!container) {
@@ -190,8 +189,8 @@ export default function PixiCanvas({
         newContainer.on("pointerupoutside", handleDragEnd);
 
         // 초기 위치 설정
-        newContainer.x = currentItem.x * (cellWidth + gap);
-        newContainer.y = currentItem.y * (cellHeight + gap);
+        newContainer.x = currentItem.position.x * (cellWidth + gap);
+        newContainer.y = currentItem.position.y * (cellHeight + gap);
 
         app.stage.addChild(newContainer);
         shapesRef.current.set(item.id, newContainer);
@@ -202,8 +201,8 @@ export default function PixiCanvas({
         container.addChild(graphics);
 
         // 위치 업데이트
-        container.x = currentItem.x * (cellWidth + gap);
-        container.y = currentItem.y * (cellHeight + gap);
+        container.x = currentItem.position.x * (cellWidth + gap);
+        container.y = currentItem.position.y * (cellHeight + gap);
       }
     });
   }, [

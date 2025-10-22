@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Item } from "@/types/item";
 import { AddableItemType } from "@/types/item";
 import { createItem } from "@/lib/itemFactory";
+import { ITEM_CONFIG } from "@/constants/itemConfig";
 
 export type Section = {
   id: string;
@@ -128,27 +129,16 @@ export const usePageState = (): UsePageStateReturn => {
     (sectionId: string, type: AddableItemType, x: number, y: number) => {
       const newItem: Item = {
         id: uuidv4(),
-        type: type as "box" | "button" | "text",
+        type: type,
         style: {
-          desktop:
-            type === "button"
-              ? {
-                  position: {
-                    x,
-                    y,
-                  },
-                  width: 3,
-                  height: 2,
-                }
-              : type === "text"
-              ? { position: { x, y }, width: 2, height: 1 }
-              : { position: { x, y }, width: 2, height: 2 },
-          mobile:
-            type === "button"
-              ? { position: { x, y }, width: 2, height: 1 }
-              : type === "text"
-              ? { position: { x, y }, width: 2, height: 1 }
-              : { position: { x, y }, width: 2, height: 2 },
+          desktop: {
+            position: { x, y },
+            ...ITEM_CONFIG[type].desktop,
+          },
+          mobile: {
+            position: { x, y },
+            ...ITEM_CONFIG[type].mobile,
+          },
         },
       };
 

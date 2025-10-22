@@ -93,7 +93,7 @@ export default function Section({
   const gridCols = useGridStore((state) => state.gridCols);
   const isMobile = useGridStore((state) => state.isMobile);
 
-  const { selectedItemId, setSelectedItemId } = useSectionStore();
+  const { setSelectedItemId } = useSectionStore();
 
   const shapeItems = section.items.filter(
     (item): item is ShapeItem =>
