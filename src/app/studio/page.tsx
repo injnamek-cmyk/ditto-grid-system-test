@@ -169,8 +169,8 @@ export default function StudioPage() {
   }, [resizingSectionId, triggerResize, updateSectionHeight]);
 
   return (
-    <div className="min-h-screen relative">
-      <main className="flex pb-10">
+    <div className="min-h-screen relative bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <main className="flex pb-10 h-[calc(100vh-40px)]">
         {/* LNB */}
         <LeftNavigationBar addItem={addItem} onDragStart={handleLNBDragStart} />
 
@@ -194,21 +194,25 @@ export default function StudioPage() {
         />
 
         {/* RNB */}
-        <div className="w-[200px] bg-white border-l border-gray-200"></div>
+        <div className="w-[200px] bg-white border-l border-slate-200 shadow-sm"></div>
       </main>
 
       {/* Floating 버튼들 */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex gap-3">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-2 p-4 rounded-2xl bg-white shadow-2xl border border-slate-200 backdrop-blur-sm">
         <button
           onClick={addSection}
-          className="px-4 py-2 bg-white text-gray-700 font-bold rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200"
+          className="px-4 py-2.5 bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center gap-2 active:scale-95"
           title="섹션 추가"
         >
-          + section
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          section
         </button>
+        <div className="w-px bg-slate-200"></div>
         <button
           onClick={savePage}
-          className="w-12 h-12 bg-white text-gray-700 rounded-md shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200"
+          className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg shadow-md hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center active:scale-95"
           title="페이지 저장"
         >
           <svg
