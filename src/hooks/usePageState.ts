@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Item } from "@/types/item";
 import { AddableItemType } from "@/types/item";
@@ -69,35 +69,43 @@ interface UsePageStateReturn {
 export const usePageState = (): UsePageStateReturn => {
   const initialSectionId = uuidv4();
 
-  const [sections, setSections] = useState<Section[]>([
-    {
-      id: initialSectionId,
-      height: 24,
-      backgroundColor: "#ffffff",
-      items: [],
-    },
-  ]);
+  const [sections, setSections] = useState<Section[]>(() => {
+    // SSR 환경 체크
+    if (typeof window === "undefined") {
+      return [
+        {
+          id: initialSectionId,
+          height: 24,
+          backgroundColor: "#ffffff",
+          items: [],
+        },
+      ];
+    }
 
-  const [selectedSectionId, setSelectedSectionId] =
-    useState<string>(initialSectionId);
-
-  // 앱 시작 시 로컬 스토리지에서 페이지 데이터 불러오기
-  useEffect(() => {
-    if (typeof window === "undefined") return; // SSR 환경에서 스킵
-
+    // 로컬 스토리지에서 로드
     const savedPage = localStorage.getItem("gridPage");
     if (savedPage) {
       try {
         const page: Page = JSON.parse(savedPage);
-        setSections(page.sections);
-        if (page.sections.length > 0) {
-          setSelectedSectionId(page.sections[0].id);
-        }
+        return page.sections;
       } catch (error) {
-        console.error("페이지 데이터 불러오기 실패:", error);
+        console.error("페이지 데이터 불러오기 실패", error);
       }
     }
-  }, []);
+
+    // 저장된 페이지 없으면 기본값 반환
+    return [
+      {
+        id: uuidv4(),
+        height: 24,
+        backgroundColor: "#ffffff",
+        items: [],
+      },
+    ];
+  });
+
+  const [selectedSectionId, setSelectedSectionId] =
+    useState<string>(initialSectionId);
 
   // 섹션 추가
   const addSection = useCallback(() => {
