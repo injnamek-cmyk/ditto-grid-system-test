@@ -6,7 +6,7 @@ const AUTH_URL = "/auth";
 
 export const authApi = {
   /**
-   * 로그인 요청
+   * 회원가입 요청
    */
   login: async (data: LoginReqDto): Promise<LoginResDto> => {
     const res = await axios.post(`${AUTH_URL}/login`, data);

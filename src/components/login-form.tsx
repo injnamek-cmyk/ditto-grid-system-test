@@ -51,7 +51,7 @@ export function LoginForm({
       setUser(data.data.accessToken);
       router.push("/");
     },
-    onError: () => alert("로그인 실패"),
+    onError: (error) => alert(`로그인 실패: ${error}`),
   });
 
   const onSubmit = (data: LoginFormShemaType) => {

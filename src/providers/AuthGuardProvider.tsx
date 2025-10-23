@@ -17,6 +17,7 @@ export default function AuthGuardProvider({
 
   useEffect(() => {
     const isLoggedIn = !!accessToken;
+    // const isLoggedIn = true;
 
     // 인증이 필요한 페이지 목록
     const protectedRoutes = ["/studio"];

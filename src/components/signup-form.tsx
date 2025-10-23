@@ -15,11 +15,15 @@ import Image from "next/image";
 import { signupFormSchema, SignUpFormSchemaType } from "@/schemas/authSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import { SignUpReqDto, usersApi } from "@/app/api/users";
+import { useRouter } from "next/navigation";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
   // 회원가입 react-hook-form
   const {
     control,
@@ -34,9 +38,20 @@ export function SignupForm({
     },
   });
 
+  // 회원가입 요청 함수
+  const signupMutation = useMutation({
+    mutationFn: (userData: SignUpReqDto) => usersApi.signUp(userData),
+    onSuccess: (res) => {
+      alert(`${res.name}님 환영합니다!`);
+      router.push("/login");
+    },
+    onError: (error) => alert(`회원가입 실패: ${error}`),
+  });
+
   // 회원가입 제출
   const onSubmit = (data: SignUpFormSchemaType) => {
     if (isValid) {
+      signupMutation.mutate(data);
       console.log("폼 데이터:", data);
     } else {
       console.log("검증 실패, 에러:", errors);

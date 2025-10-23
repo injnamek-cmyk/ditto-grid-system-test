@@ -6,9 +6,9 @@ const USERS_URL = "/users";
 
 export const usersApi = {
   /**
-   * 로그인 요청
+   * 회원가입 요청
    */
-  login: async (data: SignUpReqDto): Promise<SignUpResDto> => {
+  signUp: async (data: SignUpReqDto): Promise<SignUpResDto> => {
     const res = await axios.post(`${USERS_URL}`, data);
     return res.data;
   },
