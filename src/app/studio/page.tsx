@@ -11,6 +11,7 @@ import { useGridDimensions } from "@/hooks/useGridDimensions";
 import { useGridStore } from "@/store/useGridStore";
 import { useSectionStore } from "@/store/useSectionStore";
 import { AddableItemType } from "@/types/item";
+import RightNavBar from "@/layouts/RightNavigationBar";
 
 export default function StudioPage() {
   // 반응형 그리드 크기 계산
@@ -196,7 +197,7 @@ export default function StudioPage() {
         />
 
         {/* RNB */}
-        <div className="w-[200px] bg-white border-l border-slate-200 shadow-sm"></div>
+        <RightNavBar />
       </main>
 
       {/* Floating 버튼들 */}
@@ -262,27 +263,6 @@ export default function StudioPage() {
             </svg>
           </button>
         )}
-        {/* 도형 추가 버튼들 */}
-        {/* <button
-          onClick={() => addShape("circle")}
-          className="w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:shadow-xl hover:bg-blue-600 transition-all flex items-center justify-center border-2 border-blue-600"
-          title="동그라미 추가"
-        >
-          ●
-        </button>
-        <button
-          onClick={() => addShape("triangle")}
-          className="w-12 h-12 bg-green-500 text-white shadow-lg hover:shadow-xl hover:bg-green-600 transition-all flex items-center justify-center border-2 border-green-600"
-          title="삼각형 추가"
-          style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}
-        ></button>
-        <button
-          onClick={() => addShape("rectangle")}
-          className="w-12 h-12 bg-purple-500 text-white rounded-md shadow-lg hover:shadow-xl hover:bg-purple-600 transition-all flex items-center justify-center border-2 border-purple-600"
-          title="사각형 추가"
-        >
-          ▪
-        </button> */}
       </div>
     </div>
   );

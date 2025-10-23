@@ -176,24 +176,6 @@ export default function Section({
               currentSectionId={section.id}
             />
 
-            {/* Pixi.js 도형 캔버스 */}
-            {/* {cellWidth > 0 && (
-              <PixiCanvas
-                sectionId={section.id}
-                items={shapeItems}
-                cellWidth={cellWidth}
-                cellHeight={cellHeight}
-                gap={GAP}
-                gridCols={gridCols}
-                sectionHeight={section.height}
-                isMobile={isMobile}
-                onShapeDragStart={() => onShapeDragStart(section.id)}
-                onShapeDragEnd={(itemId, newX, newY) =>
-                  onShapeDragEnd(section.id, itemId, newX, newY)
-                }
-              />
-            )} */}
-
             {/* 섹션 내 아이템들 (도형 제외) */}
             {cellWidth > 0 && (
               <ItemRenderer
