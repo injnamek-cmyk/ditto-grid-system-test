@@ -16,7 +16,7 @@ export default function LeftNavigationBar({
   onDragStart,
 }: LeftNavigationBarProps) {
   return (
-    <div className="w-[200px] bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-300 flex flex-col">
+    <div className="w-[200px] bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-300 flex flex-col h-screen">
       <div className="p-4 border-b border-gray-300">
         <h3 className="text-sm font-bold text-gray-800 tracking-wide">
           컴포넌트
@@ -24,7 +24,7 @@ export default function LeftNavigationBar({
         <p className="text-xs text-gray-500 mt-1">클릭 또는 드래그</p>
       </div>
 
-      <section className="flex flex-col gap-3 p-4 sticky top-[84px]">
+      <section className="flex flex-col gap-3 p-4 sticky top-[84px] flex-1 overflow-y-auto">
         <button
           onClick={() => addItem("box")}
           draggable

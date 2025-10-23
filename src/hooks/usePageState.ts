@@ -59,6 +59,7 @@ interface UsePageStateReturn {
     content: string
   ) => void;
   savePage: () => void;
+  deleteItem: (sectionId: string, itemId: string) => void;
 }
 
 /**
@@ -154,6 +155,19 @@ export const usePageState = (): UsePageStateReturn => {
     },
     []
   );
+
+  const deleteItem = (sectionId: string, itemId: string) => {
+    setSections((prev) =>
+      prev.map((section) => {
+        if (section.id !== sectionId) return section;
+
+        return {
+          ...section,
+          items: section.items.filter((item) => item.id !== itemId),
+        };
+      })
+    );
+  };
 
   // 섹션 배경색 변경
   const changeSectionBackgroundColor = useCallback(
@@ -334,6 +348,7 @@ export const usePageState = (): UsePageStateReturn => {
     sections,
     selectedSectionId,
     addSection,
+    deleteItem,
     addItemToSelectedSection,
     setSelectedSectionId,
     changeSectionBackgroundColor,

@@ -29,6 +29,7 @@ export default function StudioPage() {
     updateSectionHeight,
     updateItemContent,
     savePage,
+    deleteItem,
   } = usePageState();
 
   // Zustand 스토어
@@ -37,6 +38,7 @@ export default function StudioPage() {
   const setSelectedSectionId = useSectionStore(
     (state) => state.setSelectedSectionId
   );
+  const selectedItemId = useSectionStore((state) => state.selectedItemId);
 
   // 그리드 크기 변경 시 스토어 업데이트
   useEffect(() => {
@@ -198,21 +200,31 @@ export default function StudioPage() {
       </main>
 
       {/* Floating 버튼들 */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-2 p-4 rounded-2xl bg-white shadow-2xl border border-slate-200 backdrop-blur-sm">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-2 p-4 rounded-2xl bg-white shadow-2xl border border-slate-200 backdrop-blur-sm items-center *:shrink-0">
         <button
           onClick={addSection}
           className="px-4 py-2.5 bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center gap-2 active:scale-95"
           title="섹션 추가"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           section
         </button>
         <div className="w-px bg-slate-200"></div>
         <button
           onClick={savePage}
-          className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg shadow-md hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center active:scale-95"
+          className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg shadow-md hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center active:scale-95 shrink-0"
           title="페이지 저장"
         >
           <svg
@@ -229,6 +241,27 @@ export default function StudioPage() {
             />
           </svg>
         </button>
+        {selectedItemId && (
+          <button
+            onClick={() => deleteItem(selectedSectionId, selectedItemId)}
+            className="size-10 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-3 border-2 border-red-600 font-medium"
+            title="선택된 아이템 삭제"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          </button>
+        )}
         {/* 도형 추가 버튼들 */}
         {/* <button
           onClick={() => addShape("circle")}
