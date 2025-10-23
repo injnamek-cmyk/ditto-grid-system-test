@@ -1,9 +1,7 @@
-import PixiCanvas from "@/components/PixiCanvas";
 import GridCells from "@/components/GridCells";
 import ItemRenderer from "@/components/ItemRenderer";
 import DragPreview from "@/components/DragPreview";
 import { Section as SectionType } from "@/hooks/usePageState";
-import { ShapeItem } from "@/types/item";
 import { GAP } from "@/constants/grid";
 import { useGridStore } from "@/store/useGridStore";
 import { useSectionStore } from "@/store/useSectionStore";
@@ -79,8 +77,8 @@ export default function Section({
   onSectionDragOver,
   onSectionDragLeave,
   onSectionDrop,
-  onShapeDragStart,
-  onShapeDragEnd,
+  // onShapeDragStart,
+  // onShapeDragEnd,
   onToggleGridVisibility,
   onItemDragStop,
   onItemResizeStop,
@@ -95,12 +93,12 @@ export default function Section({
 
   const { setSelectedItemId } = useSectionStore();
 
-  const shapeItems = section.items.filter(
-    (item): item is ShapeItem =>
-      item.type === "circle" ||
-      item.type === "triangle" ||
-      item.type === "rectangle"
-  );
+  // const shapeItems = section.items.filter(
+  //   (item): item is ShapeItem =>
+  //     item.type === "circle" ||
+  //     item.type === "triangle" ||
+  //     item.type === "rectangle"
+  // );
 
   return (
     <div
@@ -179,7 +177,7 @@ export default function Section({
             />
 
             {/* Pixi.js 도형 캔버스 */}
-            {cellWidth > 0 && (
+            {/* {cellWidth > 0 && (
               <PixiCanvas
                 sectionId={section.id}
                 items={shapeItems}
@@ -194,7 +192,7 @@ export default function Section({
                   onShapeDragEnd(section.id, itemId, newX, newY)
                 }
               />
-            )}
+            )} */}
 
             {/* 섹션 내 아이템들 (도형 제외) */}
             {cellWidth > 0 && (

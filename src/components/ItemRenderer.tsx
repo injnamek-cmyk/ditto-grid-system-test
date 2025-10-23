@@ -4,6 +4,17 @@ import { Item } from "@/types/item";
 import { GAP } from "@/constants/grid";
 import { useGridStore } from "@/store/useGridStore";
 import { useSectionStore } from "@/store/useSectionStore";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
+import { Input } from "./ui/input";
+import { Switch } from "./ui/switch";
 
 interface ItemRendererProps {
   items: Item[];
@@ -53,17 +64,90 @@ export default function ItemRenderer({
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState<string>("");
 
-  // 섹션 내 아이템들 (도형 제외)
-  const nonShapeItems = items.filter(
-    (item) =>
-      item.type !== "circle" &&
-      item.type !== "triangle" &&
-      item.type !== "rectangle"
-  );
+  /**
+   * 아이템 타입에 따른 렌더링 컴포넌트를 반환하는 함수
+   */
+  const renderItemContent = (item: Item) => {
+    switch (item.type) {
+      case "button":
+        return (
+          <button className="w-full h-full bg-blue-500 hover:bg-blue-600 text-white rounded-md cursor-move flex items-center justify-center text-sm font-semibold shadow-md hover:shadow-lg transition-all border border-blue-600">
+            Button
+          </button>
+        );
+
+      case "text":
+        return editingItemId === item.id ? (
+          <input
+            autoFocus
+            type="text"
+            value={editingText}
+            onChange={(e) => setEditingText(e.target.value)}
+            onBlur={() => {
+              onItemContentUpdate?.(sectionId, item.id, editingText);
+              setEditingItemId(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                onItemContentUpdate?.(sectionId, item.id, editingText);
+                setEditingItemId(null);
+              }
+            }}
+            className="flex items-center text-center w-full h-full bg-transparent text-gray-700 text-sm font-normal focus:outline-none"
+          />
+        ) : (
+          <div
+            onClick={() => {
+              setEditingItemId(item.id);
+              setEditingText(item.content || "");
+            }}
+            className="flex justify-center items-center text-center cursor-text text-gray-700 text-sm font-normal h-full"
+          >
+            {item.content || "클릭해서 입력"}
+          </div>
+        );
+
+      case "input_filed":
+        return (
+          <FieldSet>
+            <FieldLegend>Profile</FieldLegend>
+            <FieldDescription>
+              This appears on invoices and emails.
+            </FieldDescription>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="name">Full name</FieldLabel>
+                <Input id="name" autoComplete="off" placeholder="Evil Rabbit" />
+                <FieldDescription>
+                  This appears on invoices and emails.
+                </FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="username">Username</FieldLabel>
+                <Input id="username" autoComplete="off" aria-invalid />
+                <FieldError>Choose another username.</FieldError>
+              </Field>
+              <Field orientation="horizontal">
+                <Switch id="newsletter" />
+                <FieldLabel htmlFor="newsletter">
+                  Subscribe to the newsletter
+                </FieldLabel>
+              </Field>
+            </FieldGroup>
+          </FieldSet>
+        );
+
+      case "box":
+      default:
+        return (
+          <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
+        );
+    }
+  };
 
   return (
     <>
-      {nonShapeItems.map((item) => {
+      {items.map((item) => {
         const currentItem = isMobile ? item.style.mobile : item.style.desktop;
         const isSelected = selectedItemId === item.id;
 
@@ -142,43 +226,7 @@ export default function ItemRenderer({
                   }}
                 />
               )}
-              {item.type === "button" ? (
-                <button className="w-full h-full bg-blue-500 hover:bg-blue-600 text-white rounded-md cursor-move flex items-center justify-center text-sm font-semibold shadow-md hover:shadow-lg transition-all border border-blue-600">
-                  Button
-                </button>
-              ) : item.type === "text" ? (
-                editingItemId === item.id ? (
-                  <input
-                    autoFocus
-                    type="text"
-                    value={editingText}
-                    onChange={(e) => setEditingText(e.target.value)}
-                    onBlur={() => {
-                      onItemContentUpdate?.(sectionId, item.id, editingText);
-                      setEditingItemId(null);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        onItemContentUpdate?.(sectionId, item.id, editingText);
-                        setEditingItemId(null);
-                      }
-                    }}
-                    className="flex items-center text-center w-full h-full bg-transparent text-gray-700 text-sm font-normal focus:outline-none"
-                  />
-                ) : (
-                  <div
-                    onClick={() => {
-                      setEditingItemId(item.id);
-                      setEditingText(item.content || "");
-                    }}
-                    className="flex justify-center items-center text-center cursor-text text-gray-700 text-sm font-normal h-full"
-                  >
-                    {item.content || "클릭해서 입력"}
-                  </div>
-                )
-              ) : (
-                <div className="w-full h-full bg-white rounded-md cursor-move flex items-center justify-center text-gray-400 text-sm font-medium shadow-md hover:shadow-lg transition-shadow border border-gray-200"></div>
-              )}
+              {renderItemContent(item)}
             </div>
           </Rnd>
         );

@@ -18,7 +18,9 @@ export default function LeftNavigationBar({
   return (
     <div className="w-[200px] bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-300 flex flex-col">
       <div className="p-4 border-b border-gray-300">
-        <h3 className="text-sm font-bold text-gray-800 tracking-wide">컴포넌트</h3>
+        <h3 className="text-sm font-bold text-gray-800 tracking-wide">
+          컴포넌트
+        </h3>
         <p className="text-xs text-gray-500 mt-1">클릭 또는 드래그</p>
       </div>
 
@@ -32,7 +34,9 @@ export default function LeftNavigationBar({
         >
           <div className="flex flex-col items-center gap-1">
             <span className="text-3xl font-light leading-none">+</span>
-            <span className="text-xs font-medium text-gray-600 group-hover:text-blue-600 transition-colors">박스</span>
+            <span className="text-xs font-medium text-gray-600 group-hover:text-blue-600 transition-colors">
+              박스
+            </span>
           </div>
         </button>
 
@@ -45,7 +49,9 @@ export default function LeftNavigationBar({
         >
           <div className="flex flex-col items-center gap-1">
             <span className="text-lg font-bold">BTN</span>
-            <span className="text-xs font-medium opacity-90 group-hover:opacity-100 transition-opacity">버튼</span>
+            <span className="text-xs font-medium opacity-90 group-hover:opacity-100 transition-opacity">
+              버튼
+            </span>
           </div>
         </button>
 
@@ -58,7 +64,24 @@ export default function LeftNavigationBar({
         >
           <div className="flex flex-col items-center gap-1">
             <span className="text-lg font-bold">T</span>
-            <span className="text-xs font-medium opacity-90 group-hover:opacity-100 transition-opacity">텍스트</span>
+            <span className="text-xs font-medium opacity-90 group-hover:opacity-100 transition-opacity">
+              텍스트
+            </span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => addItem("input_filed")}
+          draggable
+          onDragStart={(e) => onDragStart?.(e, "input_filed")}
+          className="group relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-300 rounded-lg shadow-md hover:shadow-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-200 flex items-center justify-center h-16 border-2 border-gray-300 cursor-grab active:cursor-grabbing"
+          title="텍스트 추가 (끌어서 드롭)"
+        >
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-lg font-bold">T</span>
+            <span className="text-xs font-medium opacity-90 group-hover:opacity-100 transition-opacity">
+              입력 필드
+            </span>
           </div>
         </button>
       </section>
