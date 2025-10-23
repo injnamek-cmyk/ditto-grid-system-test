@@ -13,10 +13,10 @@ export default function AuthGuardProvider({
 }: AuthGuardProviderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useUserStore();
+  const { accessToken } = useUserStore();
 
   useEffect(() => {
-    const isLoggedIn = !!user;
+    const isLoggedIn = !!accessToken;
 
     // 인증이 필요한 페이지 목록
     const protectedRoutes = ["/studio"];
@@ -40,7 +40,7 @@ export default function AuthGuardProvider({
       router.push("/");
       return;
     }
-  }, [pathname, router, user]);
+  }, [pathname, router, accessToken]);
 
   return <>{children}</>;
 }

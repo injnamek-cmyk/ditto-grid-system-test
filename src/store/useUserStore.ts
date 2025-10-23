@@ -1,21 +1,17 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-interface UserType {
-  email: string;
-}
-
 export interface UserStore {
-  user: UserType | null;
-  setUser: (user: UserType) => void;
+  accessToken: string | null;
+  setUser: (accessToken: string) => void;
 }
 
 export const useUserStore = create<UserStore>()(
   persist(
     (set) => ({
-      user: null,
-      setUser: (user: UserType) => set({ user }),
-      clearUser: () => set({ user: null }),
+      accessToken: null,
+      setUser: (accessToken: string) => set({ accessToken }),
+      clearUser: () => set({ accessToken: null }),
     }),
     {
       name: "user", // 로컬 스토리지 key 지정

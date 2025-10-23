@@ -22,6 +22,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginFormSchema, LoginFormShemaType } from "@/schemas/authSchemas";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
+import { useMutation } from "@tanstack/react-query";
+import { authApi } from "@/app/api/auth";
 
 export function LoginForm({
   className,
@@ -42,10 +44,19 @@ export function LoginForm({
     },
   });
 
+  // 로그인 요청
+  const loginMutation = useMutation({
+    mutationFn: (userData: LoginFormShemaType) => authApi.login(userData),
+    onSuccess: (data) => {
+      setUser(data.data.accessToken);
+      router.push("/");
+    },
+    onError: () => alert("로그인 실패"),
+  });
+
   const onSubmit = (data: LoginFormShemaType) => {
     if (isValid) {
-      setUser(data);
-      router.push("/");
+      loginMutation.mutate(data);
     } else {
       console.log("검증 실패, 에러:", errors);
     }
