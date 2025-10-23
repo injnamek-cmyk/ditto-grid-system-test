@@ -23,7 +23,7 @@ import { loginFormSchema, LoginFormShemaType } from "@/schemas/authSchemas";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useMutation } from "@tanstack/react-query";
-import { authApi } from "@/app/api/auth";
+import { authService } from "@/app/api/auth";
 
 export function LoginForm({
   className,
@@ -45,8 +45,8 @@ export function LoginForm({
   });
 
   // 로그인 요청
-  const loginMutation = useMutation({
-    mutationFn: (userData: LoginFormShemaType) => authApi.login(userData),
+  const { mutate: loginMutation, isPending } = useMutation({
+    mutationFn: (userData: LoginFormShemaType) => authService.login(userData),
     onSuccess: (data) => {
       setUser(data.data.accessToken);
       router.push("/");
@@ -56,7 +56,7 @@ export function LoginForm({
 
   const onSubmit = (data: LoginFormShemaType) => {
     if (isValid) {
-      loginMutation.mutate(data);
+      loginMutation(data);
     } else {
       console.log("검증 실패, 에러:", errors);
     }
@@ -108,7 +108,9 @@ export function LoginForm({
                 />
               </Field>
               <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit" disabled={isPending}>
+                  Login
+                </Button>
                 <Button variant="outline" type="button">
                   Login with Google
                 </Button>

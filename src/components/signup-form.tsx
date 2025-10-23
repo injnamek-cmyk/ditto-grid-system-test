@@ -16,7 +16,7 @@ import { signupFormSchema, SignUpFormSchemaType } from "@/schemas/authSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
-import { SignUpReqDto, usersApi } from "@/app/api/users";
+import { SignUpReqDto, usersService } from "@/app/api/users";
 import { useRouter } from "next/navigation";
 
 export function SignupForm({
@@ -39,8 +39,8 @@ export function SignupForm({
   });
 
   // 회원가입 요청 함수
-  const signupMutation = useMutation({
-    mutationFn: (userData: SignUpReqDto) => usersApi.signUp(userData),
+  const { mutate: signupMutation, isPending } = useMutation({
+    mutationFn: (userData: SignUpReqDto) => usersService.signUp(userData),
     onSuccess: (res) => {
       alert(`${res.name}님 환영합니다!`);
       router.push("/login");
@@ -51,7 +51,7 @@ export function SignupForm({
   // 회원가입 제출
   const onSubmit = (data: SignUpFormSchemaType) => {
     if (isValid) {
-      signupMutation.mutate(data);
+      signupMutation(data);
       console.log("폼 데이터:", data);
     } else {
       console.log("검증 실패, 에러:", errors);
@@ -110,7 +110,9 @@ export function SignupForm({
                 </Field>
               </Field>
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit" disabled={isPending}>
+                  Create Account
+                </Button>
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with

@@ -1,2 +1,2 @@
 export * from "./dto/users.dto";
-export * from "./usersApi";
+export * from "./usersService";
