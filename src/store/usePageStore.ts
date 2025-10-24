@@ -43,8 +43,7 @@ interface PageState {
     updater: (section: Section) => Section
   ) => void;
 
-  addItemToSelectedSection: (type: AddableItemType) => void;
-  addItemAtPosition: (
+  addItem: (
     sectionId: string,
     type: AddableItemType,
     x: number,
@@ -177,17 +176,7 @@ export const usePageStore = create<PageState>((set) => {
       }));
     },
 
-    addItemToSelectedSection(type) {
-      set((state) => ({
-        sections: state.sections.map((s) =>
-          s.id === state.selectedSectionId
-            ? { ...s, items: [...s.items, createItem(type)] }
-            : s
-        ),
-      }));
-    },
-
-    addItemAtPosition(sectionId, type, x, y) {
+    addItem(sectionId, type, x = 0, y = 0) {
       const newItem: Item = {
         id: uuidv4(),
         type: type,

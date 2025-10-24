@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { CELL_ASPECT_RATIO } from "@/constants/grid";
 import { useLayoutStore } from "@/store/useLayoutStore";
 

@@ -15,7 +15,7 @@ interface UseDragAndDropProps {
   cellWidth: number;
   cellHeight: number;
   gridCols: number;
-  addItemAtPosition: (
+  addItem: (
     sectionId: string,
     itemType: AddableItemType,
     x: number,
@@ -54,7 +54,7 @@ export const useDragAndDrop = ({
   cellWidth,
   cellHeight,
   gridCols,
-  addItemAtPosition,
+  addItem,
   sections,
   onShowGrid,
   onHideGrid,
@@ -146,7 +146,7 @@ export const useDragAndDrop = ({
     if (!coordinates) return;
 
     // 드롭한 위치에 아이템 추가
-    addItemAtPosition(
+    addItem(
       sectionId,
       draggedItemType as AddableItemType,
       coordinates.x,

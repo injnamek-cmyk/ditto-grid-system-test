@@ -1,67 +1,43 @@
 "use client";
 
-import { useEffect } from "react";
+import React from "react";
 import Canvas from "@/components/Canvas";
 import LeftNavigationBar from "@/layouts/LeftNavigationBar";
-import { usePageState } from "@/hooks/usePageState";
-import { useSectionResize } from "@/hooks/useSectionResize";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
-import { useGridVisibility } from "@/hooks/useGridVisibility";
 import { useGridDimensions } from "@/hooks/useGridDimensions";
 import { useLayoutStore } from "@/store/useLayoutStore";
-import { useSectionStore } from "@/store/useSectionStore";
 import { AddableItemType } from "@/types/item";
 import RightNavBar from "@/layouts/RightNavigationBar";
+import { usePageStore } from "@/store/usePageStore";
 
 export default function StudioPage() {
   // 반응형 그리드 크기 계산
   const { gridRef } = useGridDimensions();
 
+  // LayoutStore에서 그리드 정보 구독
+  const { cellWidth, cellHeight, gridCols, isMobile } = useLayoutStore();
+
   // 페이지 상태 관리
   const {
     sections,
-    selectedSectionId: pageSelectedSectionId,
+    selectedSectionId,
+    selectedItemId,
+    gridVisibleSectionId,
     addSection,
-    changeSectionBackgroundColor,
-    updateItemPosition,
-    updateItemSize,
-    addItemAtPosition,
-    updateSectionHeight,
-    updateItemContent,
-    savePage,
+    updateSection,
+    addItem,
     deleteItem,
-  } = usePageState();
+    updateItem,
+    savePage,
+    showGrid,
+    hideGrid,
+    setResizingSectionId,
+  } = usePageStore();
 
-  // Zustand 스토어
-  const setGridDimensions = useGridStore((state) => state.setGridDimensions);
-  const selectedSectionId = useSectionStore((state) => state.selectedSectionId);
-  const setSelectedSectionId = useSectionStore(
-    (state) => state.setSelectedSectionId
-  );
-  const selectedItemId = useSectionStore((state) => state.selectedItemId);
-
-  // 그리드 크기 변경 시 스토어 업데이트
-  useEffect(() => {
-    setGridDimensions(cellWidth, cellHeight, gridCols, isMobile);
-  }, [cellWidth, cellHeight, gridCols, isMobile, setGridDimensions]);
-
-  // 페이지 상태의 선택된 섹션이 변경되면 스토어에도 반영
-  useEffect(() => {
-    if (pageSelectedSectionId) {
-      setSelectedSectionId(pageSelectedSectionId);
-    }
-  }, [pageSelectedSectionId, setSelectedSectionId]);
-
-  // 그리드 가시성 관리
-  const { gridVisibleSectionId, toggleGridVisibility, showGrid, hideGrid } =
-    useGridVisibility();
-
-  // 섹션 리사이즈 훅
-  const {
-    resizingSectionId,
-    handleResizeStart,
-    updateSectionHeight: triggerResize,
-  } = useSectionResize(cellHeight);
+  // LNB에서 아이템 추가 헬퍼 함수
+  const handleAddItem = (type: AddableItemType) => {
+    addItem(selectedSectionId, type, 0, 0);
+  };
 
   // 드래그 앤 드롭 훅
   const {
@@ -74,20 +50,15 @@ export default function StudioPage() {
     cellWidth,
     cellHeight,
     gridCols,
-    addItemAtPosition,
+    addItem,
     sections,
     onShowGrid: showGrid,
     onHideGrid: hideGrid,
   });
 
-  // LNB에서 아이템 추가 헬퍼 함수
-  const addItem = (type: AddableItemType) => {
-    addItemAtPosition(selectedSectionId, type, 0, 0);
-  };
-
   // 도형 드래그 시작 핸들러
   const handleShapeDragStart = (sectionId: string) => {
-    toggleGridVisibility(sectionId, true);
+    showGrid(sectionId);
   };
 
   // 도형 드래그 종료 핸들러
@@ -97,20 +68,27 @@ export default function StudioPage() {
     newX: number,
     newY: number
   ) => {
-    toggleGridVisibility(sectionId, false);
+    hideGrid();
 
-    const section = sections.find((s) => s.id === sectionId);
-    if (section) {
-      updateItemPosition(
-        sectionId,
-        itemId,
-        newX,
-        newY,
-        section.height,
-        isMobile,
-        gridCols
-      );
-    }
+    updateItem(sectionId, itemId, (item) => ({
+      ...item,
+      style: {
+        ...item.style,
+        [isMobile ? "mobile" : "desktop"]: {
+          ...(isMobile ? item.style.mobile : item.style.desktop),
+          position: {
+            x: Math.max(0, Math.min(gridCols - 1, newX)),
+            y: Math.max(
+              0,
+              Math.min(
+                sections.find((s) => s.id === sectionId)?.height || 24,
+                newY
+              )
+            ),
+          },
+        },
+      },
+    }));
   };
 
   // 아이템 드래그 종료 핸들러
@@ -121,17 +99,21 @@ export default function StudioPage() {
     newRow: number
   ) => {
     const section = sections.find((s) => s.id === sectionId);
-    if (section) {
-      updateItemPosition(
-        sectionId,
-        itemId,
-        newCol,
-        newRow,
-        section.height,
-        isMobile,
-        gridCols
-      );
-    }
+    if (!section) return;
+
+    updateItem(sectionId, itemId, (item) => ({
+      ...item,
+      style: {
+        ...item.style,
+        [isMobile ? "mobile" : "desktop"]: {
+          ...(isMobile ? item.style.mobile : item.style.desktop),
+          position: {
+            x: Math.max(0, Math.min(gridCols - 1, newCol)),
+            y: Math.max(0, Math.min(section.height - 1, newRow)),
+          },
+        },
+      },
+    }));
   };
 
   // 아이템 리사이즈 종료 핸들러
@@ -144,37 +126,71 @@ export default function StudioPage() {
     newHeight: number
   ) => {
     const section = sections.find((s) => s.id === sectionId);
-    if (section) {
-      updateItemSize(
-        sectionId,
-        itemId,
-        newCol,
-        newRow,
-        newWidth,
-        newHeight,
-        section.height,
-        isMobile,
-        gridCols
-      );
-    }
+    if (!section) return;
+
+    const clampedX = Math.max(0, Math.min(gridCols - 1, newCol));
+    const clampedY = Math.max(0, Math.min(section.height - 1, newRow));
+    const clampedWidth = Math.max(1, Math.min(gridCols - newCol, newWidth));
+    const clampedHeight = Math.max(
+      1,
+      Math.min(section.height - newRow, newHeight)
+    );
+
+    updateItem(sectionId, itemId, (item) => ({
+      ...item,
+      style: {
+        ...item.style,
+        [isMobile ? "mobile" : "desktop"]: {
+          position: { x: clampedX, y: clampedY },
+          width: clampedWidth,
+          height: clampedHeight,
+        },
+      },
+    }));
   };
 
-  // 섹션 리사이즈 useEffect
-  useEffect(() => {
-    if (resizingSectionId === null) return;
+  // 섹션 리사이즈 핸들러
+  const handleSectionResizeStart = (
+    sectionId: string,
+    sectionHeight: number,
+    e: React.MouseEvent
+  ) => {
+    e.preventDefault();
+    setResizingSectionId(sectionId);
 
-    const cleanup = triggerResize((newHeight) => {
-      updateSectionHeight(resizingSectionId, newHeight);
-    });
+    const resizeStartY = e.clientY;
+    const resizeStartHeight = sectionHeight;
 
-    return cleanup;
-  }, [resizingSectionId, triggerResize, updateSectionHeight]);
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = e.clientY - resizeStartY;
+      const rowHeight = cellHeight + 4; // GAP === 4;
+      const deltaRows = Math.round(deltaY / rowHeight);
+      const newHeight = Math.max(12, resizeStartHeight + deltaRows);
+
+      updateSection(sectionId, (section) => ({
+        ...section,
+        height: newHeight,
+      }));
+    };
+
+    const handleMouseUp = () => {
+      setResizingSectionId(null);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
 
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <main className="flex pb-10 h-[calc(100vh-40px)]">
         {/* LNB */}
-        <LeftNavigationBar addItem={addItem} onDragStart={handleLNBDragStart} />
+        <LeftNavigationBar
+          addItem={handleAddItem}
+          onDragStart={handleLNBDragStart}
+        />
 
         {/* Canvas */}
         <Canvas
@@ -182,17 +198,29 @@ export default function StudioPage() {
           gridVisibleSectionId={gridVisibleSectionId}
           dragPreview={dragPreview}
           gridRef={gridRef}
-          onBackgroundColorChange={changeSectionBackgroundColor}
+          onBackgroundColorChange={(sectionId, color) =>
+            updateSection(sectionId, (section) => ({
+              ...section,
+              backgroundColor: color,
+            }))
+          }
           onSectionDragOver={handleSectionDragOver}
           onSectionDragLeave={handleSectionDragLeave}
           onSectionDrop={handleSectionDrop}
           onShapeDragStart={handleShapeDragStart}
           onShapeDragEnd={handleShapeDragEnd}
-          onToggleGridVisibility={toggleGridVisibility}
+          onToggleGridVisibility={(sectionId, visible) =>
+            visible ? showGrid(sectionId) : hideGrid()
+          }
           onItemDragStop={handleItemDragStop}
           onItemResizeStop={handleItemResizeStop}
-          onItemContentUpdate={updateItemContent}
-          onSectionResizeStart={handleResizeStart}
+          onItemContentUpdate={(sectionId, itemId, content) =>
+            updateItem(sectionId, itemId, (item) => ({
+              ...item,
+              content,
+            }))
+          }
+          onSectionResizeStart={handleSectionResizeStart}
         />
 
         {/* RNB */}

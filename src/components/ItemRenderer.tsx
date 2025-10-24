@@ -2,8 +2,8 @@ import { Rnd } from "react-rnd";
 import React, { useState } from "react";
 import { Item } from "@/types/item";
 import { GAP } from "@/constants/grid";
-import { useGridStore } from "@/store/useLayoutStore";
-import { useSectionStore } from "@/store/useSectionStore";
+import { useLayoutStore } from "@/store/useLayoutStore";
+import { usePageStore } from "@/store/usePageStore";
 import {
   Field,
   FieldDescription,
@@ -52,13 +52,12 @@ export default function ItemRenderer({
   onItemContentUpdate,
 }: ItemRendererProps) {
   // Zustand 스토어에서 grid 정보 가져오기 (각 상태를 개별적으로 구독)
-  const cellWidth = useGridStore((state) => state.cellWidth);
-  const cellHeight = useGridStore((state) => state.cellHeight);
-  const isMobile = useGridStore((state) => state.isMobile);
+  const cellWidth = useLayoutStore((state) => state.cellWidth);
+  const cellHeight = useLayoutStore((state) => state.cellHeight);
+  const isMobile = useLayoutStore((state) => state.isMobile);
 
   // 아이템 선택 상태
-  const selectedItemId = useSectionStore((state) => state.selectedItemId);
-  const setSelectedItemId = useSectionStore((state) => state.setSelectedItemId);
+  const { selectedItemId, setSelectedItemId } = usePageStore();
 
   // 텍스트 편집 상태
   const [editingItemId, setEditingItemId] = useState<string | null>(null);

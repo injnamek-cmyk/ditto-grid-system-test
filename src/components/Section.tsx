@@ -1,10 +1,9 @@
 import GridCells from "@/components/GridCells";
 import ItemRenderer from "@/components/ItemRenderer";
 import DragPreview from "@/components/DragPreview";
-import { Section as SectionType } from "@/hooks/usePageState";
 import { GAP } from "@/constants/grid";
-import { useGridStore } from "@/store/useLayoutStore";
-import { useSectionStore } from "@/store/useSectionStore";
+import { useLayoutStore } from "@/store/useLayoutStore";
+import { usePageStore, Section as SectionType } from "@/store/usePageStore";
 
 interface SectionProps {
   section: SectionType;
@@ -86,12 +85,11 @@ export default function Section({
   onSectionResizeStart,
 }: SectionProps) {
   // Zustand 스토어에서 grid 정보 가져오기 (각 상태를 개별적으로 구독)
-  const cellWidth = useGridStore((state) => state.cellWidth);
-  const cellHeight = useGridStore((state) => state.cellHeight);
-  const gridCols = useGridStore((state) => state.gridCols);
-  const isMobile = useGridStore((state) => state.isMobile);
+  const cellWidth = useLayoutStore((state) => state.cellWidth);
+  const cellHeight = useLayoutStore((state) => state.cellHeight);
+  const gridCols = useLayoutStore((state) => state.gridCols);
 
-  const { setSelectedItemId } = useSectionStore();
+  const { setSelectedItemId } = usePageStore();
 
   // const shapeItems = section.items.filter(
   //   (item): item is ShapeItem =>

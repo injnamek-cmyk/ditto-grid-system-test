@@ -1,6 +1,5 @@
 import Section from "@/components/Section";
-import { Section as SectionType } from "@/hooks/usePageState";
-import { useSectionStore } from "@/store/useSectionStore";
+import { usePageStore, Section as SectionType } from "@/store/usePageStore";
 
 interface CanvasProps {
   sections: SectionType[];
@@ -14,13 +13,30 @@ interface CanvasProps {
   } | null;
   gridRef: React.RefObject<HTMLDivElement | null>;
   onBackgroundColorChange: (sectionId: string, color: string) => void;
-  onSectionDragOver: (e: React.DragEvent<HTMLDivElement>, sectionId: string, height: number) => void;
+  onSectionDragOver: (
+    e: React.DragEvent<HTMLDivElement>,
+    sectionId: string,
+    height: number
+  ) => void;
   onSectionDragLeave: (e: React.DragEvent<HTMLDivElement>) => void;
-  onSectionDrop: (e: React.DragEvent<HTMLDivElement>, sectionId: string) => void;
+  onSectionDrop: (
+    e: React.DragEvent<HTMLDivElement>,
+    sectionId: string
+  ) => void;
   onShapeDragStart: (sectionId: string) => void;
-  onShapeDragEnd: (sectionId: string, itemId: string, newX: number, newY: number) => void;
+  onShapeDragEnd: (
+    sectionId: string,
+    itemId: string,
+    newX: number,
+    newY: number
+  ) => void;
   onToggleGridVisibility: (sectionId: string, visible: boolean) => void;
-  onItemDragStop: (sectionId: string, itemId: string, newCol: number, newRow: number) => void;
+  onItemDragStop: (
+    sectionId: string,
+    itemId: string,
+    newCol: number,
+    newRow: number
+  ) => void;
   onItemResizeStop: (
     sectionId: string,
     itemId: string,
@@ -29,8 +45,16 @@ interface CanvasProps {
     newWidth: number,
     newHeight: number
   ) => void;
-  onItemContentUpdate?: (sectionId: string, itemId: string, content: string) => void;
-  onSectionResizeStart: (sectionId: string, height: number, e: React.MouseEvent<HTMLDivElement>) => void;
+  onItemContentUpdate?: (
+    sectionId: string,
+    itemId: string,
+    content: string
+  ) => void;
+  onSectionResizeStart: (
+    sectionId: string,
+    height: number,
+    e: React.MouseEvent<HTMLDivElement>
+  ) => void;
 }
 
 export default function Canvas({
@@ -50,9 +74,8 @@ export default function Canvas({
   onItemContentUpdate,
   onSectionResizeStart,
 }: CanvasProps) {
-  // Zustand 스토어에서 선택된 섹션 가져오기 (각 상태를 개별적으로 구독)
-  const selectedSectionId = useSectionStore((state) => state.selectedSectionId);
-  const setSelectedSectionId = useSectionStore((state) => state.setSelectedSectionId);
+  const { selectedSectionId, setSelectedSectionId } = usePageStore();
+
   return (
     <div className="w-full">
       {sections.map((section, sectionIndex) => (
