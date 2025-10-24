@@ -8,15 +8,14 @@ import { useSectionResize } from "@/hooks/useSectionResize";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useGridVisibility } from "@/hooks/useGridVisibility";
 import { useGridDimensions } from "@/hooks/useGridDimensions";
-import { useGridStore } from "@/store/useLayoutStore";
+import { useLayoutStore } from "@/store/useLayoutStore";
 import { useSectionStore } from "@/store/useSectionStore";
 import { AddableItemType } from "@/types/item";
 import RightNavBar from "@/layouts/RightNavigationBar";
 
 export default function StudioPage() {
   // 반응형 그리드 크기 계산
-  const { cellWidth, cellHeight, gridCols, isMobile, gridRef } =
-    useGridDimensions();
+  const { gridRef } = useGridDimensions();
 
   // 페이지 상태 관리
   const {

@@ -1,25 +1,23 @@
 import { useState, useEffect, useRef } from "react";
 import { CELL_ASPECT_RATIO } from "@/constants/grid";
+import { useLayoutStore } from "@/store/useLayoutStore";
 
 interface UseGridDimensionsReturn {
-  cellWidth: number;
-  cellHeight: number;
-  gridCols: number;
-  isMobile: boolean;
   gridRef: React.RefObject<HTMLDivElement | null>;
 }
 
 /**
  * 반응형 그리드 크기를 계산하고 관리하는 커스텀 훅
  * 셀 너비와 높이(비율 1.6:1)를 계산하고, 반응형 그리드 컬럼 수를 관리합니다.
+ * 계산된 값은 useLayoutStore에 자동으로 저장되므로, 이 훅은 gridRef만 반환합니다.
+ *
+ * 다른 컴포넌트에서 계산 결과를 사용할 때는:
+ * const { cellWidth, cellHeight, gridCols, isMobile } = useLayoutStore();
  */
 export const useGridDimensions = (): UseGridDimensionsReturn => {
   const gridRef = useRef<HTMLDivElement>(null);
 
-  const [cellWidth, setCellWidth] = useState(0);
-  const [cellHeight, setCellHeight] = useState(0);
-  const [gridCols, setGridCols] = useState(24);
-  const [isMobile, setIsMobile] = useState(false);
+  const setGridDimensions = useLayoutStore((state) => state.setGridDimensions);
 
   useEffect(() => {
     const updateCellSize = () => {
@@ -28,9 +26,6 @@ export const useGridDimensions = (): UseGridDimensionsReturn => {
         const width = window.innerWidth;
         const cols = width < 768 ? 12 : 24; // 모바일: 12, 데스크톱: 24
         const mobile = width < 768;
-
-        setGridCols(cols);
-        setIsMobile(mobile);
 
         // CSS Grid가 실제로 렌더링한 셀 크기를 측정
         const firstCell = gridRef.current.querySelector(
@@ -43,8 +38,13 @@ export const useGridDimensions = (): UseGridDimensionsReturn => {
           // 비율을 유지하여 높이 계산
           const calculatedCellHeight = calculatedCellWidth / CELL_ASPECT_RATIO;
 
-          setCellWidth(calculatedCellWidth);
-          setCellHeight(calculatedCellHeight);
+          // 계산된 값을 LayoutStore에 저장
+          setGridDimensions(
+            calculatedCellWidth,
+            calculatedCellHeight,
+            cols,
+            mobile
+          );
         }
       }
     };
@@ -72,13 +72,9 @@ export const useGridDimensions = (): UseGridDimensionsReturn => {
         resizeObserver.disconnect();
       }
     };
-  }, []);
+  }, [setGridDimensions]);
 
   return {
-    cellWidth,
-    cellHeight,
-    gridCols,
-    isMobile,
     gridRef,
   };
 };

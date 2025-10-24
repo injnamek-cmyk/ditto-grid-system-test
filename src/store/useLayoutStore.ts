@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export interface GridState {
+export interface LayoutState {
   // Layout 크기 정보
   cellWidth: number;
   cellHeight: number;
@@ -16,7 +16,7 @@ export interface GridState {
   ) => void;
 }
 
-export const useGridStore = create<GridState>((set) => ({
+export const useLayoutStore = create<LayoutState>((set) => ({
   cellWidth: 0,
   cellHeight: 0,
   gridCols: 12,
