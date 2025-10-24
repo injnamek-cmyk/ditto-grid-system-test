@@ -13,6 +13,14 @@ export type ItemStyleProps = {
   };
   width: number;
   height: number;
+  backgroundColor?: string;
+  borderColor?: string;
+  borderRadius?: number;
+  fontSize?: number;
+  fontWeight?: "normal" | "bold" | "semibold";
+  textAlign?: "left" | "center" | "right";
+  padding?: number;
+  opacity?: number;
 };
 
 export type Item = {
