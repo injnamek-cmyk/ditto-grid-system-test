@@ -3,7 +3,7 @@ import ItemRenderer from "@/components/ItemRenderer";
 import DragPreview from "@/components/DragPreview";
 import { Section as SectionType } from "@/hooks/usePageState";
 import { GAP } from "@/constants/grid";
-import { useGridStore } from "@/store/useGridStore";
+import { useGridStore } from "@/store/useLayoutStore";
 import { useSectionStore } from "@/store/useSectionStore";
 
 interface SectionProps {

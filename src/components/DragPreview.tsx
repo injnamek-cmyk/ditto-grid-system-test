@@ -1,5 +1,5 @@
 import { GAP } from "@/constants/grid";
-import { useGridStore } from "@/store/useGridStore";
+import { useGridStore } from "@/store/useLayoutStore";
 
 interface DragPreviewProps {
   dragPreview: {
@@ -30,8 +30,7 @@ export default function DragPreview({
         left: `${dragPreview.gridX * (cellWidth + GAP)}px`,
         top: `${dragPreview.gridY * (cellHeight + GAP)}px`,
         width: `${
-          dragPreview.cellWidth * cellWidth +
-          (dragPreview.cellWidth - 1) * GAP
+          dragPreview.cellWidth * cellWidth + (dragPreview.cellWidth - 1) * GAP
         }px`,
         height: `${
           dragPreview.cellHeight * cellHeight +

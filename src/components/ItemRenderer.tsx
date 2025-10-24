@@ -2,7 +2,7 @@ import { Rnd } from "react-rnd";
 import React, { useState } from "react";
 import { Item } from "@/types/item";
 import { GAP } from "@/constants/grid";
-import { useGridStore } from "@/store/useGridStore";
+import { useGridStore } from "@/store/useLayoutStore";
 import { useSectionStore } from "@/store/useSectionStore";
 import {
   Field,

@@ -8,7 +8,7 @@ import { useSectionResize } from "@/hooks/useSectionResize";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useGridVisibility } from "@/hooks/useGridVisibility";
 import { useGridDimensions } from "@/hooks/useGridDimensions";
-import { useGridStore } from "@/store/useGridStore";
+import { useGridStore } from "@/store/useLayoutStore";
 import { useSectionStore } from "@/store/useSectionStore";
 import { AddableItemType } from "@/types/item";
 import RightNavBar from "@/layouts/RightNavigationBar";
