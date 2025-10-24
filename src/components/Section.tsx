@@ -107,54 +107,10 @@ export default function Section({
       onDragLeave={onSectionDragLeave}
       onDrop={(e) => onSectionDrop(e, section.id)}
     >
-      {/* 선택 버튼 오버레이 (선택되지 않은 섹션에만 표시) */}
-      {!isSelected && (
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-          <button
-            className="px-6 py-3 bg-white text-black rounded-lg shadow-lg pointer-events-auto font-medium"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSectionClick(section.id);
-            }}
-          >
-            섹션 선택하기
-          </button>
-        </div>
-      )}
-
-      {/* 호버 시 어두운 배경 (선택되지 않은 섹션) */}
-      {!isSelected && (
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 pointer-events-none"></div>
-      )}
-
       <div
         className="max-w-[1920px] mx-auto px-4"
         onClick={() => setSelectedItemId(null)}
       >
-        {/* 선택된 섹션에 컬러 피커 표시 */}
-        {isSelected && (
-          <div className="mb-4 flex items-center gap-2 bg-white p-3 rounded-lg shadow-md border border-gray-200">
-            <label className="text-sm font-medium text-gray-700">배경색:</label>
-            <input
-              type="color"
-              value={section.backgroundColor}
-              onChange={(e) =>
-                onBackgroundColorChange(section.id, e.target.value)
-              }
-              className="w-12 h-8 rounded cursor-pointer border border-gray-300"
-            />
-            <input
-              type="text"
-              value={section.backgroundColor}
-              onChange={(e) =>
-                onBackgroundColorChange(section.id, e.target.value)
-              }
-              className="px-2 py-1 text-sm border border-gray-300 rounded w-24"
-              placeholder="#ffffff"
-            />
-          </div>
-        )}
-
         <div className="relative">
           <div
             ref={sectionIndex === 0 ? gridRef : null}
