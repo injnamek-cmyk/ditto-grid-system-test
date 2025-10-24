@@ -135,7 +135,7 @@ class ApiClient {
     data?: any,
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.put<ApiResponse<T>>(
+    const response = await this.axiosInstance.post<ApiResponse<T>>(
       url,
       data,
       config

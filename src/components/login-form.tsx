@@ -48,7 +48,7 @@ export function LoginForm({
   const { mutate: loginMutation, isPending } = useMutation({
     mutationFn: (userData: LoginFormShemaType) => authService.login(userData),
     onSuccess: (data) => {
-      setUser(data.data.accessToken);
+      setUser(data.accessToken);
       router.push("/");
     },
     onError: (error) => alert(`로그인 실패: ${error}`),

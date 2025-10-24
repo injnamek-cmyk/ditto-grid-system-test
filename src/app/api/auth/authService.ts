@@ -14,7 +14,7 @@ export const authService = {
       const res = await axios.post<LoginResDto>(`${AUTH_URL}/login`, data);
 
       // API 응답이 올바른지 검증
-      if (!res.data.data.accessToken) {
+      if (!res.data.accessToken) {
         throw new Error("토큰이 응답에 없습니다.");
       }
       return res.data;

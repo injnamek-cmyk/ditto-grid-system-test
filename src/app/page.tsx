@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
-  const { user } = useUserStore();
+  const { accessToken } = useUserStore();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -37,7 +37,7 @@ export default function Home() {
         >
           Start Creating →
         </button>
-        {!user && (
+        {!accessToken && (
           <button
             onClick={() => router.push("/login")}
             className="mt-4 px-8 py-2 bg-white text-lg font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
